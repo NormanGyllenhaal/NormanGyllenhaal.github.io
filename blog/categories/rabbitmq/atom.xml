@@ -4,7 +4,7 @@
   <title><![CDATA[Category: rabbitmq | Hi, I’m Yang Peng]]></title>
   <link href="http://yeangpeng.tech/blog/categories/rabbitmq/atom.xml" rel="self"/>
   <link href="http://yeangpeng.tech/"/>
-  <updated>2016-02-18T15:57:57+08:00</updated>
+  <updated>2016-02-18T16:06:02+08:00</updated>
   <id>http://yeangpeng.tech/</id>
   <author>
     <name><![CDATA[Yang Peng]]></name>
@@ -15,9 +15,9 @@
   
   <entry>
     <title type="html"><![CDATA[CentOS6.4安装rabbitmq-server]]></title>
-    <link href="http://yeangpeng.tech/blog/2015/04/26/rabbitmq-server/"/>
-    <updated>2015-04-26T10:55:13+08:00</updated>
-    <id>http://yeangpeng.tech/blog/2015/04/26/rabbitmq-server</id>
+    <link href="http://yeangpeng.tech/blog/2014/04/26/rabbitmq-server/"/>
+    <updated>2014-04-26T10:55:13+08:00</updated>
+    <id>http://yeangpeng.tech/blog/2014/04/26/rabbitmq-server</id>
     <content type="html"><![CDATA[<h3>在 CentOS 6.4上安装python</h3>
 
 <p>自己手动安装python2.7.5，不要动系统上面其他的版本</p>

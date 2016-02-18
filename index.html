@@ -141,701 +141,6 @@
 
 
 
-<i class="icon-calendar-empty"></i>  2015-11-20 10:59</h5>
-          <div class="row-fluid">
-          
-          </div>
-          
-          <div class="row-fluid">
-          
-          <a href="/blog/categories/nginx/"><span class="badge">nginx</span></a>
-          
-          </div>
-          
-    </div>
-    <div class="span10 post-container">
-      <h1 class="link"><a href="/blog/2015/11/20/nginx/">Nginx的安装和配置</a></h1>
-      <p>nginx在工作中已经有好几个环境在使用了，
-今天自己也整理一份安装文档和nginx.conf配置选项的说明，留作以后参考。</p>
-
-<p>负载均衡配置（包括健康检查）、缓存（包括清空缓存）配置实例，请参考：<a href="http://seanlook.com/2015/06/02/nginx-cache-check/">http://seanlook.com/2015/06/02/nginx-cache-check/</a></p>
-
-<p>ssl加密请参考：<a href="http://seanlook.com/2015/05/28/nginx-ssl/">http://seanlook.com/2015/05/28/nginx-ssl/</a></p>
-
-<h2>1. 安装nginx</h2>
-
-<p>操作系统：CentOS 6.5_x86_64</p>
-
-<h3>1.1 选择稳定版本</h3>
-
-<p>我们编译安装nginx来定制自己的模块，首先安装缺少的依赖包：</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-</pre></td><td class='code'><pre><code class='bash'><span class='line'>sudo yum -y install gcc gcc-c++ make libtool zlib zlib-devel openssl openssl-devel pcre pcre-devel
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>这些软件包如果yum上没有的话可以下载源码来编译安装，只是要注意编译时默认安装的目录，
-确保下面在安装nginx时能够找到这些动态库文件（ldconfig）。</p>
-
-<p>从 <a href="http://nginx.org/en/download.html">http://nginx.org/en/download.html</a> 下载稳定版nginx-1.8.0.tar.gz到/usr/local/src下解压。</p>
-
-<p>为了后续准备我们另外下载2个插件模块：
-<a href="https://github.com/yaoweibin/nginx_upstream_check_module/archive/v0.3.0.tar.gz">https://github.com/yaoweibin/nginx_upstream_check_module/archive/v0.3.0.tar.gz</a>
-—— 检查后端服务器的状态，
-<a href="https://bitbucket.org/nginx-goodies/nginx-sticky-module-ng/get/c78b7dd79d0d.zip">https://bitbucket.org/nginx-goodies/nginx-sticky-module-ng/get/c78b7dd79d0d.zip</a>
-（建议在/usr/local/src下解压后将目录重命名为nginx-sticky-module-ng-1.2.6） —— 后端做负载均衡解决session sticky问题。</p>
-
-
-      
-       <a href="/blog/2015/11/20/nginx/">Read on &rarr;</a> 
-    </div>
-  </div>
-
-
-
-    </article>
-    
-    <hr>
-    
-  
-  
-    <article>
-      
-
-  <div class="row-fluid">
-    <div class="span2 post-meta">
-	  <h5 class="date-time">
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-<i class="icon-calendar-empty"></i>  2015-10-13 10:59</h5>
-          <div class="row-fluid">
-          
-          </div>
-          
-          <div class="row-fluid">
-          
-          <a href="/blog/categories/apache/"><span class="badge">apache</span></a>
-          
-          <a href="/blog/categories/httpd/"><span class="badge">httpd</span></a>
-          
-          <a href="/blog/categories/tomcat/"><span class="badge">tomcat</span></a>
-          
-          <a href="/blog/categories/负载均衡/"><span class="badge">负载均衡</span></a>
-          
-          </div>
-          
-    </div>
-    <div class="span10 post-container">
-      <h1 class="link"><a href="/blog/2015/10/13/httpd-tomcat/">利用httpd对Tomcat进行负载均衡</a></h1>
-      <h3>环境说明</h3>
-
-<p>操作系统：CentOS 6.5_x86_64</p>
-
-<p>前提：提前准备好编译环境，防火墙和selinux都关闭</p>
-
-<p>主机IP：两台机器，192.168.203.103、192.168.203.104</p>
-
-<p>安装软件：jdk-8u51-linux-x64, apache-tomcat-8.0.24, tomcat-connectors-1.2.41, httpd-2.2.15, httpd-devel-2.2.15</p>
-
-<h4>一、两台机器都安装JAVA8</h4>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-</pre></td><td class='code'><pre><code class='bash'><span class='line'>sudo rpm -qa <span class="p">|</span> grep jdk
-</span><span class='line'>jdk-1.7.0_45-fcs.x86_64
-</span><span class='line'>sudo rpm -e jdk-1.7.0_45
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>下载JDK8的包</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-</pre></td><td class='code'><pre><code class='bash'><span class='line'>wget --no-cookies --no-check-certificate --header <span class="s2">&quot;Cookie: gpw_e24=http%3A%2F%2Fwww.oracle.com%2F; oraclelicense=accept-securebackup-cookie&quot;</span> <span class="s2">&quot;http://download.oracle.com/otn-pub/java/jdk/8u60-b27/jdk-8u60-linux-x64.tar.gz&quot;</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>如果上述链接失效，请去官网下载最新的源码包。</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-</pre></td><td class='code'><pre><code class='bash'><span class='line'><span class="nb">cd</span> /opt/
-</span><span class='line'>tar xzf jdk-8u51-linux-x64.tar.gz
-</span><span class='line'><span class="nb">cd</span> /opt/jdk1.8.0_51/
-</span><span class='line'>sudo chown -R root:root /opt/jdk1.8.0_51/
-</span><span class='line'>sudo alternatives --install /usr/bin/java java /opt/jdk1.8.0_51/bin/java 2
-</span><span class='line'>sudo alternatives --config java
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>得到以下输出，选择刚刚安装的jdk8即可：
-      
-       <a href="/blog/2015/10/13/httpd-tomcat/">Read on &rarr;</a> 
-    </div>
-  </div>
-
-
-
-    </article>
-    
-    <hr>
-    
-  
-  
-    <article>
-      
-
-  <div class="row-fluid">
-    <div class="span2 post-meta">
-	  <h5 class="date-time">
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-<i class="icon-calendar-empty"></i>  2015-09-29 18:43</h5>
-          <div class="row-fluid">
-          
-          </div>
-          
-          <div class="row-fluid">
-          
-          <a href="/blog/categories/plplot/"><span class="badge">plplot</span></a>
-          
-          <a href="/blog/categories/gtk3/"><span class="badge">gtk3</span></a>
-          
-          <a href="/blog/categories/gtkmm3/"><span class="badge">gtkmm3</span></a>
-          
-          </div>
-          
-    </div>
-    <div class="span10 post-container">
-      <h1 class="link"><a href="/blog/2015/09/29/embedding-plplot-in-gtk-drawingareas/">Embedding PLplot in Gtk DrawingAreas</a></h1>
-      <p><strong>Update: I have turned this post into a Github project called <a href="https://github.com/tschoonj/gtkmm-plplot">Gtkmm-PLplot</a>, under the GPLv3</strong></p>
-
-<p>测试中文显示效果Scientific plotting and Gtk+ have never been good friends. Over the years there have been a number of efforts like <a href="http://gtkextra.sourceforge.net/cms/">GtkExtra</a>, <a href="http://sourceforge.net/projects/gtkdatabox/">GtkDataBox</a>, <a href="https://github.com/drahnr/goatplot">GoatPlot</a>, <a href="http://gtkgraph.sourceforge.net">GtkGraph</a>&hellip; Unfortunately these packages all appear to share a lack of active development (most are in fact abandoned), poor to non-existent documentation and in most cases lack of support for Gtk+3.</p>
-
-<p>For about a year or two I have been a minor contributor to GtkExtra, and I had started migrating the plotting widgets to Gtk+3 but I had to abandon my effort due to lack of knowledge of Cairo and Gtk+ internals, and more importantly a lack of time. I still use it in the Gtk+2 based GUI of my <a href="https://github.com/tschoonj/xmimsim">XMI-MSIM</a> package though.</p>
-
-<p>I have recently been looking into alternatives to GtkExtra as I switched to Gtk+3 (actually Gtkmm3, as I mostly code in C++ nowadays) for my new projects (e.g. <a href="https://github.com/tschoonj/bam-utils">BAM-utils</a>). I came across a package called <a href="http://plplot.sourceforge.net">PLplot</a>, which I used a long time ago for producing simple plots in PNG format in command-line utilities.</p>
-
-<p>This package used to come with Gnome bindings that ensured easy integration into Gnome based GUIs but it looks like they have been removed some time ago (I am referring here to PLplot 5.11.0, the current stable release). Instead the documentation mentions support for a <a href="http://cairographics.org">cairo</a> driver, which can be embedded in Gtk based user interfaces. Currently the documentation that covers this feature is limited to a README file and a minimal cairo-only example that demonstrates how to use the PLplot cairo driver through the <code>extcairo</code> device by producing a PostScript file.</p>
-
-<p>PLplot has the great advantage over the aforementioned Gtk+ based packages that it is very actively developed by several volunteers and comes with decent documentation, including a lot of examples written in the many languages supported by the toolkit. On the downside, the developers seem to have the unfortunate habit of regularly breaking backwards compatibility in their releases, as they did in their latest 5.11.0 release both at the API level as well as by changing the name of the pkg-config packages&hellip;</p>
-
-<p>In this blogpost I will explain how I managed to embed PLplot into Gtkmm through the GtkDrawingArea widget class, and demonstrate it using a small program that allows one to zoom in on the data, save the plot in a file and print it.</p>
-
-
-      
-       <a href="/blog/2015/09/29/embedding-plplot-in-gtk-drawingareas/">Read on &rarr;</a> 
-    </div>
-  </div>
-
-
-
-    </article>
-    
-    <hr>
-    
-  
-  
-    <article>
-      
-
-  <div class="row-fluid">
-    <div class="span2 post-meta">
-	  <h5 class="date-time">
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-<i class="icon-calendar-empty"></i>  2015-06-01 10:06</h5>
-          <div class="row-fluid">
-          
-          </div>
-          
-          <div class="row-fluid">
-          
-          <a href="/blog/categories/python/"><span class="badge">python</span></a>
-          
-          </div>
-          
-    </div>
-    <div class="span10 post-container">
-      <h1 class="link"><a href="/blog/2015/06/01/python-decorator/">python函数装饰器详解</a></h1>
-      <h3>装饰器简介</h3>
-
-<p>python有着强大的表达式语法和函数特性，其中一个我的最爱便是装饰器。
-在设计模式中，装饰器能够在不使用子类的情况下动态的修改函数、方法或类的功能。</p>
-
-<p>当你需要扩展某个函数的功能却不想直接修改这个函数的时候，装饰器就可以派上用场了。
-实现装饰器模式有很多种方法，但是python通过强大的语法支持来让这个变得相当容易。</p>
-
-<p>在这篇文章中我将深入讲解Python的函数装饰器，并通过一系列的源码示例来彻底讲清楚这个东西。
-所有例子都在Python2.7下运行通过，不过只需要稍作改变就可以运行在Python3上了，
-甚至我猜测什么都不用改变都可以的，读者可以自己去试试。</p>
-
-<p>本质上来讲，装饰器是以包装器形式工作的，其实就是在执行目标函数之前或之后加入自己的逻辑，
-而不需要改变目标函数本身就可以增强它的功能，也就是说装饰了它。
-      
-       <a href="/blog/2015/06/01/python-decorator/">Read on &rarr;</a> 
-    </div>
-  </div>
-
-
-
-    </article>
-    
-    <hr>
-    
-  
-  
-    <article>
-      
-
-  <div class="row-fluid">
-    <div class="span2 post-meta">
-	  <h5 class="date-time">
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-<i class="icon-calendar-empty"></i>  2015-05-27 14:01</h5>
-          <div class="row-fluid">
-          
-          </div>
-          
-          <div class="row-fluid">
-          
-          <a href="/blog/categories/hadoop/"><span class="badge">hadoop</span></a>
-          
-          <a href="/blog/categories/hbase/"><span class="badge">hbase</span></a>
-          
-          </div>
-          
-    </div>
-    <div class="span10 post-container">
-      <h1 class="link"><a href="/blog/2015/05/27/hadoop-hbase/">centos6上安装Hadoop和HBase</a></h1>
-      <h3>安装前的准备</h3>
-
-<p>操作系统：CentOS 6.5 64位</p>
-
-<p>在linux环境安装Hadoop之前，我们需要使用到ssh，所以要先安装ssh，并且创建一个hadoop用户</p>
-
-<p><strong>备注：</strong> 下面所有的命令中，以#开头的表示是root用户，以$开头的是普通用户</p>
-
-<h4>安装SSH</h4>
-
-<p>先切换到root用户，执行下列步骤</p>
-
-<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-</pre></td><td class='code'><pre><code class=''><span class='line'>rpm -qa |grep ssh  #检查是否装了SSH包
-</span><span class='line'>yum install openssh-server  #安装ssh
-</span><span class='line'>chkconfig --list sshd #检查SSHD是否设置为开机启动
-</span><span class='line'>chkconfig --level 2345 sshd on  #如果没设置启动就设置下.
-</span><span class='line'>service sshd restart  #重新启动</span></code></pre></td></tr></table></div></figure>
-
-
-<h4>创建hadoop用户
-      
-       <a href="/blog/2015/05/27/hadoop-hbase/">Read on &rarr;</a> 
-    </div>
-  </div>
-
-
-
-    </article>
-    
-    <hr>
-    
-  
-  
-    <article>
-      
-
-  <div class="row-fluid">
-    <div class="span2 post-meta">
-	  <h5 class="date-time">
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-<i class="icon-calendar-empty"></i>  2015-05-22 13:53</h5>
-          <div class="row-fluid">
-          
-          </div>
-          
-          <div class="row-fluid">
-          
-          <a href="/blog/categories/yaml/"><span class="badge">yaml</span></a>
-          
-          </div>
-          
-    </div>
-    <div class="span10 post-container">
-      <h1 class="link"><a href="/blog/2015/05/22/yaml-introduce/">yaml入门笔记</a></h1>
-      <p><strong>Wiki：</strong></p>
-
-<p>YAML（IPA: /ˈjæməl/，尾音类似camel骆驼）是一个可读性高，用来表达资料序列的格式。
-YAML参考了其他多种语言，包括：XML、C语言、Python、Perl以及电子邮件格式RFC2822。
-Clark Evans在2001年在首次发表了这种语言[1] ，
-另外Ingy döt Net与Oren Ben-Kiki也是这语言的共同设计者。
-目前已经有数种编程语言或脚本语言支援（或者说解析）这种语言。</p>
-
-<p>YAML是”YAML Ain’t a Markup Language”（YAML不是一种置标语言）的递回缩写。
-在开发的这种语言时，YAML 的意思其实是：”Yet Another Markup Language”（仍是一种置标语言），
-但为了强调这种语言以数据做为中心，而不是以置标语言为重点，而用返璞词重新命名。</p>
-
-<p>最新版本为1.2，官方说明地址： <a href="http://www.yaml.org/spec/1.2/spec.html">http://www.yaml.org/spec/1.2/spec.html</a></p>
-
-<p>使用方式：作为配置文件，数据交换格式，序列化对象存储，测试数据文件，</p>
-
-<p>一个简单的示例：
-      
-       <a href="/blog/2015/05/22/yaml-introduce/">Read on &rarr;</a> 
-    </div>
-  </div>
-
-
-
-    </article>
-    
-    <hr>
-    
-  
-  
-    <article>
-      
-
-  <div class="row-fluid">
-    <div class="span2 post-meta">
-	  <h5 class="date-time">
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-<i class="icon-calendar-empty"></i>  2015-05-19 14:01</h5>
-          <div class="row-fluid">
-          
-          </div>
-          
-          <div class="row-fluid">
-          
-          <a href="/blog/categories/xpath/"><span class="badge">xpath</span></a>
-          
-          </div>
-          
-    </div>
-    <div class="span10 post-container">
-      <h1 class="link"><a href="/blog/2015/05/19/xpath-introduce/">xpath入门笔记</a></h1>
-      <h3>Wiki</h3>
-
-<p>XPath即为XML路径语言（XML Path Language），它是一种用来确定XML文档中某部分位置的语言。
-XPath基于XML的树状结构，提供在数据结构树中找寻节点的能力。
-起初XPath的提出的初衷是将其作为一个通用的、介于XPointer与XSL间的语法模型。
-但是XPath很快的被开发者采用来当作小型查询语言。</p>
-
-<p>W3C网址： <a href="http://www.w3schools.com/XPath/">http://www.w3schools.com/XPath/</a></p>
-
-<h3>表示法</h3>
-
-<p>最常见的XPath表达式是路径表达式（XPath这一名称的另一来源）。</p>
-
-<p>路径表达式是从一个XML节点（当前的上下文节点）到另一个节点、或一组节点的书面步骤顺序。
-这些步骤以“／”字符分开，每一步有三个构成成分：
-      
-       <a href="/blog/2015/05/19/xpath-introduce/">Read on &rarr;</a> 
-    </div>
-  </div>
-
-
-
-    </article>
-    
-    <hr>
-    
-  
-  
-    <article>
-      
-
-  <div class="row-fluid">
-    <div class="span2 post-meta">
-	  <h5 class="date-time">
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-<i class="icon-calendar-empty"></i>  2015-04-26 10:55</h5>
-          <div class="row-fluid">
-          
-          </div>
-          
-          <div class="row-fluid">
-          
-          <a href="/blog/categories/rabbitmq/"><span class="badge">rabbitmq</span></a>
-          
-          </div>
-          
-    </div>
-    <div class="span10 post-container">
-      <h1 class="link"><a href="/blog/2015/04/26/rabbitmq-server/">CentOS6.4安装rabbitmq-server</a></h1>
-      <h3>在 CentOS 6.4上安装python</h3>
-
-<p>自己手动安装python2.7.5，不要动系统上面其他的版本</p>
-
-<p><strong>1,先安装GCC，用如下命令yum install gcc gcc-c++</strong></p>
-
-<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-</pre></td><td class='code'><pre><code class=''><span class='line'>yum install zlib
-</span><span class='line'>yum install zlib-devel</span></code></pre></td></tr></table></div></figure>
-
-
-<p><strong>2,下载 <a href="https://www.python.org/ftp/python/2.7.5/Python-2.7.5.tgz">python-2.7.5.tar.gz</a> 文件，修改文件权限</strong></p>
-
-<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-</pre></td><td class='code'><pre><code class=''><span class='line'>chmode +x python-7.5.tar.gz</span></code></pre></td></tr></table></div></figure>
-
-
-<p><strong>3,解压tar文件</strong></p>
-
-<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-</pre></td><td class='code'><pre><code class=''><span class='line'>tar -xzvf python-2.7.5.tar.gz</span></code></pre></td></tr></table></div></figure>
-
-
-<p><strong>4,编辑Setup.dist</strong></p>
-
-<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-</pre></td><td class='code'><pre><code class=''><span class='line'>cd python-2.7.5
-</span><span class='line'>vim Python-2.7.5/Modules/Setup.dist</span></code></pre></td></tr></table></div></figure>
-
-
-<p>找到
-      
-       <a href="/blog/2015/04/26/rabbitmq-server/">Read on &rarr;</a> 
-    </div>
-  </div>
-
-
-
-    </article>
-    
-    <hr>
-    
-  
-  
-    <article>
-      
-
-  <div class="row-fluid">
-    <div class="span2 post-meta">
-	  <h5 class="date-time">
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-<i class="icon-calendar-empty"></i>  2015-04-24 10:47</h5>
-          <div class="row-fluid">
-          
-          </div>
-          
-          <div class="row-fluid">
-          
-          <a href="/blog/categories/归并排序/"><span class="badge">归并排序</span></a>
-          
-          </div>
-          
-    </div>
-    <div class="span10 post-container">
-      <h1 class="link"><a href="/blog/2015/04/24/merge-sort/">归并排序中对小数组采用插入排序</a></h1>
-      <p>纯归并排序的复杂度为O(nlgn)，而纯插入排序的时间复杂度为O(n<sup>2</sup>)。数据量很大的时候采用归并排序。</p>
-
-<p>但是在n较小的时候插入排序可能运行的会更快点。因此在归并排序中当子问题变得足够小时，
-采用插入排序来使得递归的叶子变粗可以加快排序速度。那么这个足够小到底怎么去衡量呢？ 请看下面：</p>
-
-<p>这么几个我不证明了，比较简单：</p>
-
-<ol>
-<li>插入排序最坏情况下可以在O(nk)时间内排序每个长度为k的n/k个子列表
-<em>. 在最坏情况下可在O(nlg(n/k))的时间内合并这些子表
-</em>. 修订后的算法的最坏情况运行时间复杂度是O(nk + nlg(n/k))</li>
-</ol>
-
-
-<p>那么，O(nk+nlg(n/k))=O(nlgn).只能最大是k=O(lgn).等式左边中第一项是高阶项。
-k如果大于lgn,则比归并排序复杂度大了。
-左边可以写成nk+nlgn-nlgk，k等于lgn时，就是2nlgn-nlglgn.忽略恒定系数，则与归并排序是一样的。
-最后结论： k &lt; lg(n)的时候，使用插入排序。
-      
-       <a href="/blog/2015/04/24/merge-sort/">Read on &rarr;</a> 
-    </div>
-  </div>
-
-
-
-    </article>
-    
-    <hr>
-    
-  
-  
-    <article>
-      
-
-  <div class="row-fluid">
-    <div class="span2 post-meta">
-	  <h5 class="date-time">
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 <i class="icon-calendar-empty"></i>  2015-04-22 13:45</h5>
           <div class="row-fluid">
           
@@ -888,6 +193,769 @@ k如果大于lgn,则比归并排序复杂度大了。
 
       
        <a href="/blog/2015/04/22/fastjson-date/">Read on &rarr;</a> 
+    </div>
+  </div>
+
+
+
+    </article>
+    
+    <hr>
+    
+  
+  
+    <article>
+      
+
+  <div class="row-fluid">
+    <div class="span2 post-meta">
+	  <h5 class="date-time">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<i class="icon-calendar-empty"></i>  2015-04-21 15:42</h5>
+          <div class="row-fluid">
+          
+          </div>
+          
+          <div class="row-fluid">
+          
+          <a href="/blog/categories/java8/"><span class="badge">java8</span></a>
+          
+          </div>
+          
+    </div>
+    <div class="span10 post-container">
+      <h1 class="link"><a href="/blog/2015/04/21/java8-lambda/">Java8中的lambda表达式</a></h1>
+      <p>2014年3月18日，Oracle终于发布Java8正式版。在新的版本里面加入了很多特性，
+总共增加了55个新特性，其中最最吸引人的就是Lambdas表达式和Stream函数式编程，本文详细讲解这两个特性。</p>
+
+<p>其他特性比如日期API，泛型，反射，注解，集合框架，并发，Nashorn引擎等等这里暂时就不详细介绍了。
+具体可以参考：<a href="http://openjdk.java.net/projects/jdk8/features">http://openjdk.java.net/projects/jdk8/features</a></p>
+
+<p>昨天参加了Oracle的Java8宣讲活动，有幸目睹了Simon Ritter的风采，写个总结来分享下。</p>
+
+<p><strong>Java并发编程演变：</strong></p>
+
+
+
+
+
+<table class="mytable">
+    <tbody>
+    <tr>
+    <td>版本</td>
+    <td>发布年份</td>
+    <td>并发技术</td>
+    </tr>
+    <tr>
+    <td>1.4</td>
+    <td>2002</td>
+    <td>java.lang.Thread</td>
+    </tr>
+    <tr>
+    <td>5</td>
+    <td>2004</td>
+    <td>java.util.concurrent(jsr166)</td>
+    </tr>
+    <tr>
+    <td>6</td>
+    <td>2006</td>
+    <td>Phasers, etc(jsr166)</td>
+    </tr>
+    <tr>
+    <td>7</td>
+    <td>2011</td>
+    <td>Fork/Join Framework(jsr166y)</td>
+    </tr>
+    <tr>
+    <td>8</td>
+    <td>2014</td>
+    <td>Project Lambda</td>
+    </tr>
+    </tbody>
+</table>
+
+
+<p>先来一个小例子见识下Java8的威力！
+      
+       <a href="/blog/2015/04/21/java8-lambda/">Read on &rarr;</a> 
+    </div>
+  </div>
+
+
+
+    </article>
+    
+    <hr>
+    
+  
+  
+    <article>
+      
+
+  <div class="row-fluid">
+    <div class="span2 post-meta">
+	  <h5 class="date-time">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<i class="icon-calendar-empty"></i>  2015-04-19 16:36</h5>
+          <div class="row-fluid">
+          
+          </div>
+          
+          <div class="row-fluid">
+          
+          <a href="/blog/categories/memcached/"><span class="badge">memcached</span></a>
+          
+          </div>
+          
+    </div>
+    <div class="span10 post-container">
+      <h1 class="link"><a href="/blog/2015/04/19/xmemecached/">使用xmemcached客户端</a></h1>
+      <p>Xmemcached是基于java nio实现的高性能可扩展的memcached客户端。它的主要特点：</p>
+
+<ol>
+<li>高性能，稳定可靠，已经在众多公司的众多项目里得到应用。</li>
+<li>功能完备：客户端分布式、权重、最新最完整的协议支持。</li>
+<li>可扩展，易于集成</li>
+<li>可动态增删memached节点</li>
+<li>客户端操作统计</li>
+<li>NIO连接池</li>
+</ol>
+
+
+<p>等等，更多信息请见wiki文档。废话不多讲，先上代码：
+      
+       <a href="/blog/2015/04/19/xmemecached/">Read on &rarr;</a> 
+    </div>
+  </div>
+
+
+
+    </article>
+    
+    <hr>
+    
+  
+  
+    <article>
+      
+
+  <div class="row-fluid">
+    <div class="span2 post-meta">
+	  <h5 class="date-time">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<i class="icon-calendar-empty"></i>  2015-04-18 12:48</h5>
+          <div class="row-fluid">
+          
+          </div>
+          
+          <div class="row-fluid">
+          
+          <a href="/blog/categories/快速排序/"><span class="badge">快速排序</span></a>
+          
+          <a href="/blog/categories/二分查找/"><span class="badge">二分查找</span></a>
+          
+          </div>
+          
+    </div>
+    <div class="span10 post-container">
+      <h1 class="link"><a href="/blog/2015/04/18/sort-search/">快速排序和二分查找</a></h1>
+      <h3>快速排序算法和二分搜索算法：</h3>
+
+<p>算法主要分为排序算法、搜索算法、图算法。图算法我用得不多，没有发言权，本文就不说了。</p>
+
+<p>排序算法中最快的是快速排序算法，搜索算法中最快的是二分搜索算法。我也最喜欢这2 个算法。
+因为它们是使用递归实现的，代码简洁清晰，效率又非常高。</p>
+
+<p>根据我的理解，算法的本质就是数学。根据输入和设定的目标，采用有限的步骤实现输出。通常，使用计算机实现的算法，都会用到循环，这样才能发挥计算机高速运算的优势。</p>
+
+<p>循环和递归是等效的，这已经被科学家所证明。数学上没有循环，只有递归的概念，因此使用递归代替循环表示算法有很多好处：</p>
+
+<ol>
+<li>递归的代码要比循环简洁很多，也优雅很多。</li>
+<li>递归的代码可以用数学方式建模，可以从数学角度验证其正确性。</li>
+</ol>
+
+
+<p>很多函数式语言甚至没有循环的概念和关键字，强迫你使用递归来实现循环。如，ErLang 。
+递归也有一些缺点，递归使用栈来保存函数地址和参数、返回值，而栈是有一定大小的，过多的递归调用可能会造成栈溢出。但是，递归算法会容易转变为循环。我更欣赏递归的简洁，除非真的出现栈溢出的问题，我是不会使用循环的。</p>
+
+<p><br/>
+<strong>二分搜索算法</strong></p>
+
+<p>理论：</p>
+
+<p>二分搜索算法用于针对已排序的集合进行搜索。</p>
+
+<p>它的原理是：</p>
+
+<ol>
+<li>找到排序数组的中间元素，如果它匹配目标值，那么就返回它在数组中的索引。</li>
+<li>如果没有找到，那么判断中间值比目标值大还是小，
+如果中间值比目标值大，那么就对第一个元素到middle-1 的元素递归这个过程。
+如果中间值比目标值小，那么就对middle+1 到最后一个元素。</li>
+<li>如果结束的索引小于开始的索引，返回-1 ，表示没有找到。</li>
+<li>如果子集合有2 个元素，那么各自比较。因为Java 的整数除法会舍弃小数，如果数组只有2 个元素，那么middle 值一直都是第一个元素。</li>
+</ol>
+
+
+<p>经过上述的递归过程，最终将返回匹配元素的索引，或者是-1 ，表示找不到。
+      
+       <a href="/blog/2015/04/18/sort-search/">Read on &rarr;</a> 
+    </div>
+  </div>
+
+
+
+    </article>
+    
+    <hr>
+    
+  
+  
+    <article>
+      
+
+  <div class="row-fluid">
+    <div class="span2 post-meta">
+	  <h5 class="date-time">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<i class="icon-calendar-empty"></i>  2015-04-16 15:52</h5>
+          <div class="row-fluid">
+          
+          </div>
+          
+          <div class="row-fluid">
+          
+          <a href="/blog/categories/memcached/"><span class="badge">memcached</span></a>
+          
+          </div>
+          
+    </div>
+    <div class="span10 post-container">
+      <h1 class="link"><a href="/blog/2015/04/16/memcached-install/">linux上安装memcached</a></h1>
+      <p><strong>一 准备安装文件</strong></p>
+
+<p>下载memcached与libevent的安装文件：</p>
+
+<p>memcached下载地址：<a href="http://memcached.googlecode.com/files/memcached-1.4.15.tar.gz">memcached-1.4.15.tar.gz</a></p>
+
+<p>libevent下载地址：<a href="https://github.com/downloads/libevent/libevent/libevent-2.0.21-stable.tar.gz">libevent-2.0.21-stable.tar.gz</a></p>
+
+<p><strong>二 具体安装步骤</strong></p>
+
+<ol>
+<li>由于memcached依赖于libevent，因此需要安装libevent。由于linux系统可能默认已经安装libevent，执行命令：</li>
+</ol>
+
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>rpm -qa|grep libevent </span></code></pre></td></tr></table></div></figure>
+
+
+<ol>
+<li>查看系统是否带有该安装软件，如果有执行命令:</li>
+</ol>
+
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'># 由于系统自带的版本旧，忽略依赖删除
+</span><span class='line'>rpm -e libevent-1.4.13-4.el6.x86_64 –nodeps</span></code></pre></td></tr></table></div></figure>
+
+
+<ol>
+<li>安装libevent命令：
+      
+       <a href="/blog/2015/04/16/memcached-install/">Read on &rarr;</a> 
+    </div>
+  </div>
+
+
+
+    </article>
+    
+    <hr>
+    
+  
+  
+    <article>
+      
+
+  <div class="row-fluid">
+    <div class="span2 post-meta">
+	  <h5 class="date-time">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<i class="icon-calendar-empty"></i>  2015-04-14 15:41</h5>
+          <div class="row-fluid">
+          
+          </div>
+          
+          <div class="row-fluid">
+          
+          <a href="/blog/categories/递归/"><span class="badge">递归</span></a>
+          
+          <a href="/blog/categories/谜题/"><span class="badge">谜题</span></a>
+          
+          </div>
+          
+    </div>
+    <div class="span10 post-container">
+      <h1 class="link"><a href="/blog/2015/04/14/concurrent-recursive/">利用递归算法并行化解决谜题框架</a></h1>
+      <p>我们将谜题定义为：包含一个初始位置，一个目标位置，以及用于判断是否是有效移动的规则集。</p>
+
+<p>规则集包含两部分：计算从指定位置开始的所有合法移动，以及每次移动的结果位置。</p>
+
+<p>下面先给出表示谜题的抽象类，其中的类型参数P和M表示位置类和移动类。根据这个接口，我们可以写一个简单的串行求解程序，该程序将在谜题空间Puzzle Space中查找，直到找到一个解答或者找遍了整个空间都没有发现答案。注：一个移动M代表一步</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+</pre></td><td class='code'><pre><code class='java'><span class='line'><span class="cm">/** 表示 搬箱子 之类谜题的抽象类*/</span>
+</span><span class='line'><span class="kd">public</span> <span class="kd">interface</span> <span class="nc">Puzzle</span><span class="o">&lt;</span><span class="n">P</span><span class="o">,</span> <span class="n">M</span><span class="o">&gt;</span> <span class="o">{</span>
+</span><span class='line'>    <span class="n">P</span> <span class="nf">initialPosition</span><span class="o">();</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="kt">boolean</span> <span class="nf">isGoal</span><span class="o">(</span><span class="n">P</span> <span class="n">position</span><span class="o">);</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="n">Set</span><span class="o">&lt;</span><span class="n">M</span><span class="o">&gt;</span> <span class="nf">legalMoves</span><span class="o">(</span><span class="n">P</span> <span class="n">position</span><span class="o">);</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="n">P</span> <span class="nf">move</span><span class="o">(</span><span class="n">P</span> <span class="n">position</span><span class="o">,</span> <span class="n">M</span> <span class="n">move</span><span class="o">);</span>
+</span><span class='line'><span class="o">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>下面的PuzzleNode代表通过一系列的移动到达的一个位置，其中保存了到达该位置的移动以及前一个Node。只要沿着PuzzleNode链接逐步回溯，就可以重新构建出达到当前位置的移动序列。
+      
+       <a href="/blog/2015/04/14/concurrent-recursive/">Read on &rarr;</a> 
+    </div>
+  </div>
+
+
+
+    </article>
+    
+    <hr>
+    
+  
+  
+    <article>
+      
+
+  <div class="row-fluid">
+    <div class="span2 post-meta">
+	  <h5 class="date-time">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<i class="icon-calendar-empty"></i>  2014-11-20 10:59</h5>
+          <div class="row-fluid">
+          
+          </div>
+          
+          <div class="row-fluid">
+          
+          <a href="/blog/categories/nginx/"><span class="badge">nginx</span></a>
+          
+          </div>
+          
+    </div>
+    <div class="span10 post-container">
+      <h1 class="link"><a href="/blog/2014/11/20/nginx/">Nginx的安装和配置</a></h1>
+      <p>nginx在工作中已经有好几个环境在使用了，
+今天自己也整理一份安装文档和nginx.conf配置选项的说明，留作以后参考。</p>
+
+<p>负载均衡配置（包括健康检查）、缓存（包括清空缓存）配置实例，请参考：<a href="http://seanlook.com/2015/06/02/nginx-cache-check/">http://seanlook.com/2015/06/02/nginx-cache-check/</a></p>
+
+<p>ssl加密请参考：<a href="http://seanlook.com/2015/05/28/nginx-ssl/">http://seanlook.com/2015/05/28/nginx-ssl/</a></p>
+
+<h2>1. 安装nginx</h2>
+
+<p>操作系统：CentOS 6.5_x86_64</p>
+
+<h3>1.1 选择稳定版本</h3>
+
+<p>我们编译安装nginx来定制自己的模块，首先安装缺少的依赖包：</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'>sudo yum -y install gcc gcc-c++ make libtool zlib zlib-devel openssl openssl-devel pcre pcre-devel
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>这些软件包如果yum上没有的话可以下载源码来编译安装，只是要注意编译时默认安装的目录，
+确保下面在安装nginx时能够找到这些动态库文件（ldconfig）。</p>
+
+<p>从 <a href="http://nginx.org/en/download.html">http://nginx.org/en/download.html</a> 下载稳定版nginx-1.8.0.tar.gz到/usr/local/src下解压。</p>
+
+<p>为了后续准备我们另外下载2个插件模块：
+<a href="https://github.com/yaoweibin/nginx_upstream_check_module/archive/v0.3.0.tar.gz">https://github.com/yaoweibin/nginx_upstream_check_module/archive/v0.3.0.tar.gz</a>
+—— 检查后端服务器的状态，
+<a href="https://bitbucket.org/nginx-goodies/nginx-sticky-module-ng/get/c78b7dd79d0d.zip">https://bitbucket.org/nginx-goodies/nginx-sticky-module-ng/get/c78b7dd79d0d.zip</a>
+（建议在/usr/local/src下解压后将目录重命名为nginx-sticky-module-ng-1.2.6） —— 后端做负载均衡解决session sticky问题。</p>
+
+
+      
+       <a href="/blog/2014/11/20/nginx/">Read on &rarr;</a> 
+    </div>
+  </div>
+
+
+
+    </article>
+    
+    <hr>
+    
+  
+  
+    <article>
+      
+
+  <div class="row-fluid">
+    <div class="span2 post-meta">
+	  <h5 class="date-time">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<i class="icon-calendar-empty"></i>  2014-10-13 10:59</h5>
+          <div class="row-fluid">
+          
+          </div>
+          
+          <div class="row-fluid">
+          
+          <a href="/blog/categories/apache/"><span class="badge">apache</span></a>
+          
+          <a href="/blog/categories/httpd/"><span class="badge">httpd</span></a>
+          
+          <a href="/blog/categories/tomcat/"><span class="badge">tomcat</span></a>
+          
+          <a href="/blog/categories/负载均衡/"><span class="badge">负载均衡</span></a>
+          
+          </div>
+          
+    </div>
+    <div class="span10 post-container">
+      <h1 class="link"><a href="/blog/2014/10/13/httpd-tomcat/">利用httpd对Tomcat进行负载均衡</a></h1>
+      <h3>环境说明</h3>
+
+<p>操作系统：CentOS 6.5_x86_64</p>
+
+<p>前提：提前准备好编译环境，防火墙和selinux都关闭</p>
+
+<p>主机IP：两台机器，192.168.203.103、192.168.203.104</p>
+
+<p>安装软件：jdk-8u51-linux-x64, apache-tomcat-8.0.24, tomcat-connectors-1.2.41, httpd-2.2.15, httpd-devel-2.2.15</p>
+
+<h4>一、两台机器都安装JAVA8</h4>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'>sudo rpm -qa <span class="p">|</span> grep jdk
+</span><span class='line'>jdk-1.7.0_45-fcs.x86_64
+</span><span class='line'>sudo rpm -e jdk-1.7.0_45
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>下载JDK8的包</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'>wget --no-cookies --no-check-certificate --header <span class="s2">&quot;Cookie: gpw_e24=http%3A%2F%2Fwww.oracle.com%2F; oraclelicense=accept-securebackup-cookie&quot;</span> <span class="s2">&quot;http://download.oracle.com/otn-pub/java/jdk/8u60-b27/jdk-8u60-linux-x64.tar.gz&quot;</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>如果上述链接失效，请去官网下载最新的源码包。</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'><span class="nb">cd</span> /opt/
+</span><span class='line'>tar xzf jdk-8u51-linux-x64.tar.gz
+</span><span class='line'><span class="nb">cd</span> /opt/jdk1.8.0_51/
+</span><span class='line'>sudo chown -R root:root /opt/jdk1.8.0_51/
+</span><span class='line'>sudo alternatives --install /usr/bin/java java /opt/jdk1.8.0_51/bin/java 2
+</span><span class='line'>sudo alternatives --config java
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>得到以下输出，选择刚刚安装的jdk8即可：
+      
+       <a href="/blog/2014/10/13/httpd-tomcat/">Read on &rarr;</a> 
+    </div>
+  </div>
+
+
+
+    </article>
+    
+    <hr>
+    
+  
+  
+    <article>
+      
+
+  <div class="row-fluid">
+    <div class="span2 post-meta">
+	  <h5 class="date-time">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<i class="icon-calendar-empty"></i>  2014-06-01 10:06</h5>
+          <div class="row-fluid">
+          
+          </div>
+          
+          <div class="row-fluid">
+          
+          <a href="/blog/categories/python/"><span class="badge">python</span></a>
+          
+          </div>
+          
+    </div>
+    <div class="span10 post-container">
+      <h1 class="link"><a href="/blog/2014/06/01/python-decorator/">python函数装饰器详解</a></h1>
+      <h3>装饰器简介</h3>
+
+<p>python有着强大的表达式语法和函数特性，其中一个我的最爱便是装饰器。
+在设计模式中，装饰器能够在不使用子类的情况下动态的修改函数、方法或类的功能。</p>
+
+<p>当你需要扩展某个函数的功能却不想直接修改这个函数的时候，装饰器就可以派上用场了。
+实现装饰器模式有很多种方法，但是python通过强大的语法支持来让这个变得相当容易。</p>
+
+<p>在这篇文章中我将深入讲解Python的函数装饰器，并通过一系列的源码示例来彻底讲清楚这个东西。
+所有例子都在Python2.7下运行通过，不过只需要稍作改变就可以运行在Python3上了，
+甚至我猜测什么都不用改变都可以的，读者可以自己去试试。</p>
+
+<p>本质上来讲，装饰器是以包装器形式工作的，其实就是在执行目标函数之前或之后加入自己的逻辑，
+而不需要改变目标函数本身就可以增强它的功能，也就是说装饰了它。
+      
+       <a href="/blog/2014/06/01/python-decorator/">Read on &rarr;</a> 
+    </div>
+  </div>
+
+
+
+    </article>
+    
+    <hr>
+    
+  
+  
+    <article>
+      
+
+  <div class="row-fluid">
+    <div class="span2 post-meta">
+	  <h5 class="date-time">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<i class="icon-calendar-empty"></i>  2014-05-27 14:01</h5>
+          <div class="row-fluid">
+          
+          </div>
+          
+          <div class="row-fluid">
+          
+          <a href="/blog/categories/hadoop/"><span class="badge">hadoop</span></a>
+          
+          <a href="/blog/categories/hbase/"><span class="badge">hbase</span></a>
+          
+          </div>
+          
+    </div>
+    <div class="span10 post-container">
+      <h1 class="link"><a href="/blog/2014/05/27/hadoop-hbase/">centos6上安装Hadoop和HBase</a></h1>
+      <h3>安装前的准备</h3>
+
+<p>操作系统：CentOS 6.5 64位</p>
+
+<p>在linux环境安装Hadoop之前，我们需要使用到ssh，所以要先安装ssh，并且创建一个hadoop用户</p>
+
+<p><strong>备注：</strong> 下面所有的命令中，以#开头的表示是root用户，以$开头的是普通用户</p>
+
+<h4>安装SSH</h4>
+
+<p>先切换到root用户，执行下列步骤</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>rpm -qa |grep ssh  #检查是否装了SSH包
+</span><span class='line'>yum install openssh-server  #安装ssh
+</span><span class='line'>chkconfig --list sshd #检查SSHD是否设置为开机启动
+</span><span class='line'>chkconfig --level 2345 sshd on  #如果没设置启动就设置下.
+</span><span class='line'>service sshd restart  #重新启动</span></code></pre></td></tr></table></div></figure>
+
+
+<h4>创建hadoop用户
+      
+       <a href="/blog/2014/05/27/hadoop-hbase/">Read on &rarr;</a> 
     </div>
   </div>
 

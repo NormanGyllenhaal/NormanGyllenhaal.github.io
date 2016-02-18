@@ -4,7 +4,7 @@
   <title><![CDATA[Category: sitemesh | Hi, I’m Yang Peng]]></title>
   <link href="http://yeangpeng.tech/blog/categories/sitemesh/atom.xml" rel="self"/>
   <link href="http://yeangpeng.tech/"/>
-  <updated>2016-02-18T15:57:57+08:00</updated>
+  <updated>2016-02-18T16:06:02+08:00</updated>
   <id>http://yeangpeng.tech/</id>
   <author>
     <name><![CDATA[Yang Peng]]></name>
@@ -15,9 +15,9 @@
   
   <entry>
     <title type="html"><![CDATA[SiteMesh使用笔记]]></title>
-    <link href="http://yeangpeng.tech/blog/2015/03/28/sitemesh/"/>
-    <updated>2015-03-28T10:42:23+08:00</updated>
-    <id>http://yeangpeng.tech/blog/2015/03/28/sitemesh</id>
+    <link href="http://yeangpeng.tech/blog/2014/03/28/sitemesh/"/>
+    <updated>2014-03-28T10:42:23+08:00</updated>
+    <id>http://yeangpeng.tech/blog/2014/03/28/sitemesh</id>
     <content type="html"><![CDATA[<h3>简介</h3>
 
 <p>SiteMesh的介绍就不多说了，主要是用来统一页面风格，减少重复编码的。</p>

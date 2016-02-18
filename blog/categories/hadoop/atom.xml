@@ -4,7 +4,7 @@
   <title><![CDATA[Category: hadoop | Hi, I’m Yang Peng]]></title>
   <link href="http://yeangpeng.tech/blog/categories/hadoop/atom.xml" rel="self"/>
   <link href="http://yeangpeng.tech/"/>
-  <updated>2016-02-18T15:57:57+08:00</updated>
+  <updated>2016-02-18T16:06:02+08:00</updated>
   <id>http://yeangpeng.tech/</id>
   <author>
     <name><![CDATA[Yang Peng]]></name>
@@ -15,9 +15,9 @@
   
   <entry>
     <title type="html"><![CDATA[centos6上安装Hadoop和HBase]]></title>
-    <link href="http://yeangpeng.tech/blog/2015/05/27/hadoop-hbase/"/>
-    <updated>2015-05-27T14:01:57+08:00</updated>
-    <id>http://yeangpeng.tech/blog/2015/05/27/hadoop-hbase</id>
+    <link href="http://yeangpeng.tech/blog/2014/05/27/hadoop-hbase/"/>
+    <updated>2014-05-27T14:01:57+08:00</updated>
+    <id>http://yeangpeng.tech/blog/2014/05/27/hadoop-hbase</id>
     <content type="html"><![CDATA[<h3>安装前的准备</h3>
 
 <p>操作系统：CentOS 6.5 64位</p>

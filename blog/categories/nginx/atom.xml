@@ -4,7 +4,7 @@
   <title><![CDATA[Category: nginx | Hi, I’m Yang Peng]]></title>
   <link href="http://yeangpeng.tech/blog/categories/nginx/atom.xml" rel="self"/>
   <link href="http://yeangpeng.tech/"/>
-  <updated>2016-02-18T15:57:57+08:00</updated>
+  <updated>2016-02-18T16:06:02+08:00</updated>
   <id>http://yeangpeng.tech/</id>
   <author>
     <name><![CDATA[Yang Peng]]></name>
@@ -15,9 +15,9 @@
   
   <entry>
     <title type="html"><![CDATA[Nginx的安装和配置]]></title>
-    <link href="http://yeangpeng.tech/blog/2015/11/20/nginx/"/>
-    <updated>2015-11-20T10:59:15+08:00</updated>
-    <id>http://yeangpeng.tech/blog/2015/11/20/nginx</id>
+    <link href="http://yeangpeng.tech/blog/2014/11/20/nginx/"/>
+    <updated>2014-11-20T10:59:15+08:00</updated>
+    <id>http://yeangpeng.tech/blog/2014/11/20/nginx</id>
     <content type="html"><![CDATA[<p>nginx在工作中已经有好几个环境在使用了，
 今天自己也整理一份安装文档和nginx.conf配置选项的说明，留作以后参考。</p>
 

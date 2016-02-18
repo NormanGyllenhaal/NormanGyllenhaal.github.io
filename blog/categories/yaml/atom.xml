@@ -4,7 +4,7 @@
   <title><![CDATA[Category: yaml | Hi, I’m Yang Peng]]></title>
   <link href="http://yeangpeng.tech/blog/categories/yaml/atom.xml" rel="self"/>
   <link href="http://yeangpeng.tech/"/>
-  <updated>2016-02-18T15:57:57+08:00</updated>
+  <updated>2016-02-18T16:06:02+08:00</updated>
   <id>http://yeangpeng.tech/</id>
   <author>
     <name><![CDATA[Yang Peng]]></name>
@@ -15,9 +15,9 @@
   
   <entry>
     <title type="html"><![CDATA[yaml入门笔记]]></title>
-    <link href="http://yeangpeng.tech/blog/2015/05/22/yaml-introduce/"/>
-    <updated>2015-05-22T13:53:45+08:00</updated>
-    <id>http://yeangpeng.tech/blog/2015/05/22/yaml-introduce</id>
+    <link href="http://yeangpeng.tech/blog/2014/05/22/yaml-introduce/"/>
+    <updated>2014-05-22T13:53:45+08:00</updated>
+    <id>http://yeangpeng.tech/blog/2014/05/22/yaml-introduce</id>
     <content type="html"><![CDATA[<p><strong>Wiki：</strong></p>
 
 <p>YAML（IPA: /ˈjæməl/，尾音类似camel骆驼）是一个可读性高，用来表达资料序列的格式。

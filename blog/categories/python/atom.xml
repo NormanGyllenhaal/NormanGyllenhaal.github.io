@@ -4,7 +4,7 @@
   <title><![CDATA[Category: python | Hi, I’m Yang Peng]]></title>
   <link href="http://yeangpeng.tech/blog/categories/python/atom.xml" rel="self"/>
   <link href="http://yeangpeng.tech/"/>
-  <updated>2016-02-18T15:57:57+08:00</updated>
+  <updated>2016-02-18T16:06:02+08:00</updated>
   <id>http://yeangpeng.tech/</id>
   <author>
     <name><![CDATA[Yang Peng]]></name>
@@ -15,9 +15,9 @@
   
   <entry>
     <title type="html"><![CDATA[python函数装饰器详解]]></title>
-    <link href="http://yeangpeng.tech/blog/2015/06/01/python-decorator/"/>
-    <updated>2015-06-01T10:06:22+08:00</updated>
-    <id>http://yeangpeng.tech/blog/2015/06/01/python-decorator</id>
+    <link href="http://yeangpeng.tech/blog/2014/06/01/python-decorator/"/>
+    <updated>2014-06-01T10:06:22+08:00</updated>
+    <id>http://yeangpeng.tech/blog/2014/06/01/python-decorator</id>
     <content type="html"><![CDATA[<h3>装饰器简介</h3>
 
 <p>python有着强大的表达式语法和函数特性，其中一个我的最爱便是装饰器。

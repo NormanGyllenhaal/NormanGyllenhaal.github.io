@@ -4,7 +4,7 @@
   <title><![CDATA[Category: xpath | Hi, I’m Yang Peng]]></title>
   <link href="http://yeangpeng.tech/blog/categories/xpath/atom.xml" rel="self"/>
   <link href="http://yeangpeng.tech/"/>
-  <updated>2016-02-18T15:57:57+08:00</updated>
+  <updated>2016-02-18T16:06:02+08:00</updated>
   <id>http://yeangpeng.tech/</id>
   <author>
     <name><![CDATA[Yang Peng]]></name>
@@ -15,9 +15,9 @@
   
   <entry>
     <title type="html"><![CDATA[xpath入门笔记]]></title>
-    <link href="http://yeangpeng.tech/blog/2015/05/19/xpath-introduce/"/>
-    <updated>2015-05-19T14:01:07+08:00</updated>
-    <id>http://yeangpeng.tech/blog/2015/05/19/xpath-introduce</id>
+    <link href="http://yeangpeng.tech/blog/2014/05/19/xpath-introduce/"/>
+    <updated>2014-05-19T14:01:07+08:00</updated>
+    <id>http://yeangpeng.tech/blog/2014/05/19/xpath-introduce</id>
     <content type="html"><![CDATA[<h3>Wiki</h3>
 
 <p>XPath即为XML路径语言（XML Path Language），它是一种用来确定XML文档中某部分位置的语言。

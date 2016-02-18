@@ -4,7 +4,7 @@
   <title><![CDATA[Category: 归并排序 | Hi, I’m Yang Peng]]></title>
   <link href="http://yeangpeng.tech/blog/categories/gui-bing-pai-xu/atom.xml" rel="self"/>
   <link href="http://yeangpeng.tech/"/>
-  <updated>2016-02-18T15:57:57+08:00</updated>
+  <updated>2016-02-18T16:06:02+08:00</updated>
   <id>http://yeangpeng.tech/</id>
   <author>
     <name><![CDATA[Yang Peng]]></name>
@@ -15,9 +15,9 @@
   
   <entry>
     <title type="html"><![CDATA[归并排序中对小数组采用插入排序]]></title>
-    <link href="http://yeangpeng.tech/blog/2015/04/24/merge-sort/"/>
-    <updated>2015-04-24T10:47:35+08:00</updated>
-    <id>http://yeangpeng.tech/blog/2015/04/24/merge-sort</id>
+    <link href="http://yeangpeng.tech/blog/2014/04/24/merge-sort/"/>
+    <updated>2014-04-24T10:47:35+08:00</updated>
+    <id>http://yeangpeng.tech/blog/2014/04/24/merge-sort</id>
     <content type="html"><![CDATA[<p>纯归并排序的复杂度为O(nlgn)，而纯插入排序的时间复杂度为O(n<sup>2</sup>)。数据量很大的时候采用归并排序。</p>
 
 <p>但是在n较小的时候插入排序可能运行的会更快点。因此在归并排序中当子问题变得足够小时，

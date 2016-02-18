@@ -4,7 +4,7 @@
   <title><![CDATA[Category: linux | Hi, I’m Yang Peng]]></title>
   <link href="http://yeangpeng.tech/blog/categories/linux/atom.xml" rel="self"/>
   <link href="http://yeangpeng.tech/"/>
-  <updated>2016-02-18T15:57:57+08:00</updated>
+  <updated>2016-02-18T16:06:02+08:00</updated>
   <id>http://yeangpeng.tech/</id>
   <author>
     <name><![CDATA[Yang Peng]]></name>
@@ -15,9 +15,9 @@
   
   <entry>
     <title type="html"><![CDATA[centos6更新yum源]]></title>
-    <link href="http://yeangpeng.tech/blog/2015/04/13/centos-yum/"/>
-    <updated>2015-04-13T19:02:42+08:00</updated>
-    <id>http://yeangpeng.tech/blog/2015/04/13/centos-yum</id>
+    <link href="http://yeangpeng.tech/blog/2014/04/13/centos-yum/"/>
+    <updated>2014-04-13T19:02:42+08:00</updated>
+    <id>http://yeangpeng.tech/blog/2014/04/13/centos-yum</id>
     <content type="html"><![CDATA[<h4>先备份</h4>
 
 <pre><code class="bash">mv /etc/yum.repos.d/CentOS-Base.repo{,.bak}
