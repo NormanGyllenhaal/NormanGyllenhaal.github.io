@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+
+  <title><![CDATA[Category: hdf5 | Hi, I’m Yang Peng]]></title>
+  <link href="http://yeangpeng.tech/blog/categories/hdf5/atom.xml" rel="self"/>
+  <link href="http://yeangpeng.tech/"/>
+  <updated>2016-02-18T11:29:36+08:00</updated>
+  <id>http://yeangpeng.tech/</id>
+  <author>
+    <name><![CDATA[Yang Peng]]></name>
+    <email><![CDATA[me@yangpeng.tech]]></email>
+  </author>
+  <generator uri="http://octopress.org/">Octopress</generator>
+
+  
+  <entry>
+    <title type="html"><![CDATA[HDF5 on Windows: UTF-8 filenames support]]></title>
+    <link href="http://yeangpeng.tech/blog/2014/11/07/hdf5-on-windows-utf-8-filenames-support/"/>
+    <updated>2014-11-07T02:10:35+08:00</updated>
+    <id>http://yeangpeng.tech/blog/2014/11/07/hdf5-on-windows-utf-8-filenames-support</id>
+    <content type="html"><![CDATA[<p>In a previous <a href="http://tschoonj.github.io/blog/2014/01/29/building-a-64-bit-version-of-hdf5-with-mingw-w64/">post</a>, I have detailed my efforts in getting HDF5 compiled on Windows 64-bit using the MinGW-w64 compiler, which is currently (still) unsupported by the HDF5 developers. Now, I am reporting on yet another problem I encountered with HDF5 on Windows, that is blatantly being ignored by the developers: UTF-8 filename support.</p>
+
+<p>This was brought to my attention by a Japanese user of my software package <a href="http://github.com/tschoonj/xmimsim">XMI-MSIM</a>, who ran into trouble running the program when logged in with a username consisting of Japanese characters. The problem could be traced back to an HDF5 file that has to be opened, which is located in a subdirectory of the user&rsquo;s homedirectory. After investigating the HDF5 code, it became quite clear that this issue is caused by the internal use of the <a href="http://msdn.microsoft.com/en-us/library/z0kc8e3z.aspx"><code>_open</code> function</a>, which is known not to support the Unicode UTF-8 characterset, necessary to represent the Japanese characters. The HDF5 website confirmed this issue with the following statement:</p>
+
+<!--more-->
+
+
+<p><blockquote><p>Linux, Unix, and similar systems generally handle UTF-8 encodings in correct and predictable ways. There is an apparent consensus in the Linux community that &ldquo;UTF-8 is just the right way to go.&rdquo;<br/>Mac OS systems generally handle UTF-8 encodings correctly.</p></p><p><p>Windows systems use a different Unicode encoding, UCS-2 (discussed in this UTF-16 article) at the system level. Within an HDF5 file and application on a Windows system, UTF-8 encoding should work correctly and as expected. Problems may arise, however, when that UTF-8 encoding is exposed directly to the Windows system. For example:</p></p><p><p>File open and close calls on files with UTF-8 encoded names are likely to fail as the HDF5 open and close operations interact directly with the Windows file system interface.<br/>Anytime an HDF5 command-line utility (h5ls or h5dump, for example) emits text output, the Windows system must interpret the character encodings. If that output is UTF-8 encoded, Windows will correctly interpret only those characters in the ASCII subset of UTF-8.</p><footer><strong>HDF5 documentation <a href="http://www.hdfgroup.org/HDF5/doc/Advanced/UsingUnicode/">http://www.hdfgroup.org/HDF5/doc/Advanced/UsingUnicode/</a></strong></footer></blockquote></p>
+
+<p>So basically I was stuck here since there is no way to convert a filename in UTF-8 encoding to the UCS encoding that was expected by <code>_open</code>. <a href="http://stackoverflow.com/questions/23285759/fopen-file-name-with-utf8-string-in-windows">A solution</a> which would have converted the filename to the corresponding short form (8 character filename with 3 character extension) using <a href="http://msdn.microsoft.com/en-us/library/windows/desktop/aa364989%28v=vs.85%29.aspx"><code>GetShortPathName</code></a> seemed like a very ugly hack and decided not to pursue it. Instead I opted to hack the HDF5 code myself and replace all instances of <code>_open</code> with its wide char counterparts, that could be fed the UTF-8 filenames after converting them with <a href="http://msdn.microsoft.com/en-us/library/windows/desktop/dd319072.aspx"><code>MultiByteToWideChar</code></a>.</p>
+
+<p>Fortunately, it turned out that I was not the first one who ran into this situation and found a better solution on the <a href="http://mail.lists.hdfgroup.org/pipermail/hdf-forum_lists.hdfgroup.org/2014-August/007988.html">HDF5 forums</a>. Essentially the solution consists of redefining the <code>HDopen</code> macro from <code>_open</code> to a function of our own that converts our filename in UTF-8 encoding to the corresponding wide char representation and feed it to <code>_wopen</code>. Since we are compiling with MinGW-w64, some other modifications were necessary (the original solution relied on CMake): the src/Makefile.am file was modified in order to compile also the H5FDwindows.c and H5FDwindows.h, the latter being added to the public headers. After running <code>autoreconf -i -f</code> (I had to downgrade the required autoconf version in configure.ac for this to work, but this didn&rsquo;t create any problems), and running the configure script, I modified the src/H5pubconf.h file according to my <a href="http://tschoonj.github.io/blog/2014/01/29/building-a-64-bit-version-of-hdf5-with-mingw-w64/">earlier post</a>, but had to add one more line:</p>
+
+<pre><code class="c ">//fixes first problem
+#ifndef H5_HAVE_WIN32_API
+#ifdef WIN32 /* defined for all windows systems */
+#define H5_HAVE_WIN32_API 1
+#endif
+#endif
+
+#ifndef H5_HAVE_MINGW
+#ifdef __MINGW32__ /*defined for all MinGW compilers */
+#define H5_HAVE_MINGW 1
+//additional line necessary for UTF-8 build to succeed
+#define H5_HAVE_WINDOWS 1
+#endif
+#endif
+
+//fixes second problem
+#define H5_BUILT_AS_DYNAMIC_LIB 1
+</code></pre>
+
+<p>Keep in mind that this file is recreated after running configure, so these modifications will have to be repeated!!!</p>
+
+<p>This solution is not pretty, and it will have to be repeated every time you compile a new version of HDF5. Ideally, the HDF5 developers would implement a solution based on this hack, which would bring it in line with most other open-source projects that assume UTF-8 filenames on all platforms. I doubt this will happen anytime soon though, since the original solution posted on the HDF5 forums has not been commented on by any of the developers&hellip;</p>
+]]></content>
+  </entry>
+  
+  <entry>
+    <title type="html"><![CDATA[Building a 64-bit version of HDF5 with MinGW-w64]]></title>
+    <link href="http://yeangpeng.tech/blog/2014/01/29/building-a-64-bit-version-of-hdf5-with-mingw-w64/"/>
+    <updated>2014-01-29T16:35:00+08:00</updated>
+    <id>http://yeangpeng.tech/blog/2014/01/29/building-a-64-bit-version-of-hdf5-with-mingw-w64</id>
+    <content type="html"><![CDATA[<p>I have finally decided to try building a 64-bit version of the Windows package of <a href="http://github.com/tschoonj/xmimsim">XMI-MSIM</a>.
+As is the case for my 32-bit builds, I am using the MinGW compiler as provided by <a href="http://tdm-gcc.tdragon.net">TDM-GCC</a>, although obviously this time I opted for the 64-bit variant.
+Now XMI-MSIM has a considerable amount of dependencies (GTK+, GSL, HDF5, libxml2, libxslt, curl, json-glib and others), I am again forced to compile these all again from source before I can even think of compiling my actualy software. One exception here is GTK+ and its dependencies since the good people from the GTK project are offering 64-bit builds (compiled with MinGW-w64) on their <a href="http://www.gtk.org/download/win64.php">website</a>.</p>
+
+<p>In the past, the HDF5 build has always cost me most of my time, compared to the other packages, to get it compiled on MSYS, especially the Fortran bindings part. Now since I have dropped the dependency for these Fortran bindings in my latest version, because of my past experiences, I hoped that compiling them with MinGW-w64 might somehow have become easier.</p>
+
+<p>Alas&hellip;</p>
+
+<!--more-->
+
+
+<p>As it turns out the HDF5 people have decided to drop support for building HDF5 with MinGW with their 1.8.5 release, and are currently only supporting builds on Windows with either cygwin (with the configure script) or Visual Studio (with CMake), none of which was suitable for me.
+I downloaded the latest version 1.8.12 from the <a href="http://www.hdfgroup.org/HDF5/release/obtainsrc.html">HDF5 website</a>, unpacked the tarball and ran:</p>
+
+<pre><code>$ ./configure --host=x86_64-w64-mingw32 --build=x86_64-w64-mingw32 --disable-hl --prefix=$HOME
+</code></pre>
+
+<p>The two first options ensure that the configure script realizes that I am using a 64-bit MinGW compiler, which may be necessary for some tests to pass (at least with other packages I compiled this was necessary).
+The third option disable the high-level bindings, while the last option makes sure that they files will be installed in subfolders of my home directory.</p>
+
+<p>Running make resulted in the compilation process starting but it halted after some time with errors that were related to some preprocessor macros that were not defined. A quick google search yielded <a href="http://mail.lists.hdfgroup.org/pipermail/hdf-forum_lists.hdfgroup.org/2012-April/005699.html">this</a>. After implementing this fix I resumed compilation but ran again into trouble. This time google was not helpful but I found the fix myself.</p>
+
+<p>The solution to both problems was to append the following lines to the src/H5pubconf.h within your <em>builddirectory</em>:</p>
+
+<pre><code class="c ">//fixes first problem
+#ifndef H5_HAVE_WIN32_API
+#ifdef WIN32 /* defined for all windows systems */
+#define H5_HAVE_WIN32_API 1
+#endif
+#endif
+
+#ifndef H5_HAVE_MINGW
+#ifdef __MINGW32__ /*defined for all MinGW compilers */
+#define H5_HAVE_MINGW 1
+#endif
+#endif
+
+//fixes second problem
+#define H5_BUILT_AS_DYNAMIC_LIB 1
+</code></pre>
+
+<p>Afterwards everything builds fine, and even make check went pretty well except for one error, which seemed harmless.</p>
+
+<p>There&rsquo;s a good chance that future HDF5 versions will either fix this by including this patch (although I wouldn&rsquo;t count on it) or will break building HDF5 with MinGW-w64 once again in new and fascinating ways (I put my money on this). Since I will be stuck with HDF5 for a while longer, don&rsquo;t be surprised if this post gets updated&hellip;</p>
+]]></content>
+  </entry>
+  
+</feed>
