@@ -2,10 +2,10 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
 
   <title><![CDATA[Category: gtkextra | Hi, I’m Yang Peng]]></title>
-  <link href="http://yeangpeng.tech/blog/categories/gtkextra/atom.xml" rel="self"/>
-  <link href="http://yeangpeng.tech/"/>
-  <updated>2016-02-18T11:29:36+08:00</updated>
-  <id>http://yeangpeng.tech/</id>
+  <link href="http://normangyllenhaal.github.io/blog/categories/gtkextra/atom.xml" rel="self"/>
+  <link href="http://normangyllenhaal.github.io/"/>
+  <updated>2016-02-18T11:32:40+08:00</updated>
+  <id>http://normangyllenhaal.github.io/</id>
   <author>
     <name><![CDATA[Yang Peng]]></name>
     <email><![CDATA[me@yangpeng.tech]]></email>
@@ -15,9 +15,9 @@
   
   <entry>
     <title type="html"><![CDATA[Exporting and printing a GtkExtra plot canvas]]></title>
-    <link href="http://yeangpeng.tech/blog/2013/07/22/exporting-and-printing-a-gtkextra-plot-canvas/"/>
+    <link href="http://normangyllenhaal.github.io/blog/2013/07/22/exporting-and-printing-a-gtkextra-plot-canvas/"/>
     <updated>2013-07-22T10:24:00+08:00</updated>
-    <id>http://yeangpeng.tech/blog/2013/07/22/exporting-and-printing-a-gtkextra-plot-canvas</id>
+    <id>http://normangyllenhaal.github.io/blog/2013/07/22/exporting-and-printing-a-gtkextra-plot-canvas</id>
     <content type="html"><![CDATA[<p>My software package <a href="http://github.com/tschoonj/xmimsim">XMI-MSIM</a> relies on <a href="http://gtkextra.sourceforge.net/cms/">GtkExtra</a> for the visualization of the simulated X-ray fluorescence spectra.
 This library contains a number of useful widgets, such as a spreadsheet widget and a number of plotting tools, for your Gtk2 based GUI&rsquo;s.
 Recently, I have become a minor contributor of this project, and I have been particularly active in improving the buildsystem and also generating RPM files for a number of Fedora/RHEL based distros, and DEB files for several recent releases of Ubuntu and Debian. Full instructions on how to obtain access to these packages, which are hosted by <a href="http://www.xmi.ugent.be">my old research group</a>, can be found <a href="http://gtkextra.sourceforge.net/cms/index.php?option=com_content&amp;view=article&amp;id=40&amp;Itemid=21">here</a>.</p>

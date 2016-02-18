@@ -2,10 +2,10 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
 
   <title><![CDATA[Category: python-bindings | Hi, I’m Yang Peng]]></title>
-  <link href="http://yeangpeng.tech/blog/categories/python-bindings/atom.xml" rel="self"/>
-  <link href="http://yeangpeng.tech/"/>
-  <updated>2016-02-18T11:29:36+08:00</updated>
-  <id>http://yeangpeng.tech/</id>
+  <link href="http://normangyllenhaal.github.io/blog/categories/python-bindings/atom.xml" rel="self"/>
+  <link href="http://normangyllenhaal.github.io/"/>
+  <updated>2016-02-18T11:32:40+08:00</updated>
+  <id>http://normangyllenhaal.github.io/</id>
   <author>
     <name><![CDATA[Yang Peng]]></name>
     <email><![CDATA[me@yangpeng.tech]]></email>
@@ -15,9 +15,9 @@
   
   <entry>
     <title type="html"><![CDATA[Building libtool modules: Python bindings]]></title>
-    <link href="http://yeangpeng.tech/blog/2013/09/04/building-libtool-modules-python-bindings/"/>
+    <link href="http://normangyllenhaal.github.io/blog/2013/09/04/building-libtool-modules-python-bindings/"/>
     <updated>2013-09-04T10:47:00+08:00</updated>
-    <id>http://yeangpeng.tech/blog/2013/09/04/building-libtool-modules-python-bindings</id>
+    <id>http://normangyllenhaal.github.io/blog/2013/09/04/building-libtool-modules-python-bindings</id>
     <content type="html"><![CDATA[<p>One of the software packages (<a href="http://github.com/tschoonj/xraylib">xraylib</a>) I am working on, consists of a C-library with bindings to a number of other languages such as Python, Fortran 2003, IDL, Java, Ruby, Lua and Perl. Apart from IDL and Fortran 2003, the source code for these bindings is generated automatically using <a href="http://www.swig.org">swig</a>, although with considerable language-specific modifications to the swig interface file.</p>
 
 <p>The bindings source code afterwards needs to be compiled into a dynamically loadable library, which will then be loaded at runtime by the program whenever the user needs to use a function or variable from the bindings (actually from the underlying C-library, but exposed through the swig generated bindings).

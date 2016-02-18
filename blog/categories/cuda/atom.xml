@@ -2,10 +2,10 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
 
   <title><![CDATA[Category: cuda | Hi, I’m Yang Peng]]></title>
-  <link href="http://yeangpeng.tech/blog/categories/cuda/atom.xml" rel="self"/>
-  <link href="http://yeangpeng.tech/"/>
-  <updated>2016-02-18T11:29:36+08:00</updated>
-  <id>http://yeangpeng.tech/</id>
+  <link href="http://normangyllenhaal.github.io/blog/categories/cuda/atom.xml" rel="self"/>
+  <link href="http://normangyllenhaal.github.io/"/>
+  <updated>2016-02-18T11:32:40+08:00</updated>
+  <id>http://normangyllenhaal.github.io/</id>
   <author>
     <name><![CDATA[Yang Peng]]></name>
     <email><![CDATA[me@yangpeng.tech]]></email>
@@ -15,9 +15,9 @@
   
   <entry>
     <title type="html"><![CDATA[Building a CUDA device function library with autotools]]></title>
-    <link href="http://yeangpeng.tech/blog/2014/05/10/building-a-cuda-device-function-library-with-autotools/"/>
+    <link href="http://normangyllenhaal.github.io/blog/2014/05/10/building-a-cuda-device-function-library-with-autotools/"/>
     <updated>2014-05-10T21:08:11+08:00</updated>
-    <id>http://yeangpeng.tech/blog/2014/05/10/building-a-cuda-device-function-library-with-autotools</id>
+    <id>http://normangyllenhaal.github.io/blog/2014/05/10/building-a-cuda-device-function-library-with-autotools</id>
     <content type="html"><![CDATA[<p>I have recently started a new development branch in my <a href="http://github.com/tschoonj/xraylib">xraylib</a> project, where I will gradually be adding support for <a href="https://developer.nvidia.com/about-cuda">nVidia&rsquo;s CUDA platform</a>. Essentially the goal is to create a library containing CUDA device function equivalents of most functions that are currently offered by xraylib. Since there is not really much point to include functions that deal with strings, I will be leaving those out.</p>
 
 <p>Compiling such a library has been supported by nVidia since CUDA version 5.5, but for some reason I never got their examples working. However, their recent 6.0 release seems to have fixed things (at least for me). In this post I will share some of the tricks I had to come up with to generate such a library.</p>

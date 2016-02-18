@@ -2,10 +2,10 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
 
   <title><![CDATA[Category: runtime installer | Hi, I’m Yang Peng]]></title>
-  <link href="http://yeangpeng.tech/blog/categories/runtime-installer/atom.xml" rel="self"/>
-  <link href="http://yeangpeng.tech/"/>
-  <updated>2016-02-18T11:29:36+08:00</updated>
-  <id>http://yeangpeng.tech/</id>
+  <link href="http://normangyllenhaal.github.io/blog/categories/runtime-installer/atom.xml" rel="self"/>
+  <link href="http://normangyllenhaal.github.io/"/>
+  <updated>2016-02-18T11:32:40+08:00</updated>
+  <id>http://normangyllenhaal.github.io/</id>
   <author>
     <name><![CDATA[Yang Peng]]></name>
     <email><![CDATA[me@yangpeng.tech]]></email>
@@ -15,9 +15,9 @@
   
   <entry>
     <title type="html"><![CDATA[Gtk2 64-bit Windows Runtime Environment Installer: now on GitHub!]]></title>
-    <link href="http://yeangpeng.tech/blog/2014/09/29/gtk2-64-bit-windows-runtime-environment-installer-now-on-github/"/>
+    <link href="http://normangyllenhaal.github.io/blog/2014/09/29/gtk2-64-bit-windows-runtime-environment-installer-now-on-github/"/>
     <updated>2014-09-29T19:33:58+08:00</updated>
-    <id>http://yeangpeng.tech/blog/2014/09/29/gtk2-64-bit-windows-runtime-environment-installer-now-on-github</id>
+    <id>http://normangyllenhaal.github.io/blog/2014/09/29/gtk2-64-bit-windows-runtime-environment-installer-now-on-github</id>
     <content type="html"><![CDATA[<p>As predicted in my <a href="http://tschoonj.github.io/blog/2014/02/08/gtk2-64-bit-windows-runtime-environment-installer/">first post</a> on the Gtk2 64-bit Windows Runtime Environment Installer, I have indeed ventured into compiling Gtk (2.24.24) and all its dependencies, mainly because I was getting increasingly unhappy with the old Gtk 2.22.1 based bundle that <a href="http://www.gtk.org/download/win64.php">is being distributed</a> by the Gtk project. It was in fact this very bundle that I was using to generate the installer I announced in my first post on this subject.</p>
 
 <p>So, after spending about 10 hours of compiling (and recompiling a couple of times when I didn&rsquo;t get the configure options right) of more than a dozen software packages, I ended up with a fully working (at least until now&hellip;) collection of DLLs. I updated the code from my initial installer to include the new DLLs and uploaded the new installer <a href="http://lvserver.ugent.be/gtk-win64/">here</a>. I also uploaded a zip-file (sdk) containing all executables, DLLs, linking libraries (.dll.a) and headers, that can be used by anyone not willing to replicate my compilation effort. In fact I recommend that people using this installer to distribute the Gtk runtime along with their own program, to compile and link against this sdk, in order to avoid any link issues at runtime&hellip;</p>
@@ -30,9 +30,9 @@
   
   <entry>
     <title type="html"><![CDATA[Gtk2 64-bit Windows Runtime Environment Installer]]></title>
-    <link href="http://yeangpeng.tech/blog/2014/02/08/gtk2-64-bit-windows-runtime-environment-installer/"/>
+    <link href="http://normangyllenhaal.github.io/blog/2014/02/08/gtk2-64-bit-windows-runtime-environment-installer/"/>
     <updated>2014-02-08T12:47:00+08:00</updated>
-    <id>http://yeangpeng.tech/blog/2014/02/08/gtk2-64-bit-windows-runtime-environment-installer</id>
+    <id>http://normangyllenhaal.github.io/blog/2014/02/08/gtk2-64-bit-windows-runtime-environment-installer</id>
     <content type="html"><![CDATA[<p><strong>Update: this post has been largely superseded by <a href="http://tschoonj.github.io/blog/2014/09/29/gtk2-64-bit-windows-runtime-environment-installer-now-on-github">http://tschoonj.github.io/blog/2014/09/29/gtk2-64-bit-windows-runtime-environment-installer-now-on-github</a> </strong></p>
 
 <p>As I already mentioned in my <a href="http://tschoonj.github.io/blog/2014/01/29/building-a-64-bit-version-of-hdf5-with-mingw-w64/">last post</a>, I have been busy compiling software with MinGW-w64 for the Windows 64-bit platform.f. One of the packages I rely on is <a href="http://www.gtk.org">Gtk+</a> (version 2 for now), and its many dependencies. Fortunately however, the <a href="http://www.gtk.org/download/win64.php">Gtk+ website</a> offers binaries for this architecture, so I didn&rsquo;t have to bother compiling them myself.</p>

@@ -2,10 +2,10 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
 
   <title><![CDATA[Category: unicode | Hi, I’m Yang Peng]]></title>
-  <link href="http://yeangpeng.tech/blog/categories/unicode/atom.xml" rel="self"/>
-  <link href="http://yeangpeng.tech/"/>
-  <updated>2016-02-18T11:29:36+08:00</updated>
-  <id>http://yeangpeng.tech/</id>
+  <link href="http://normangyllenhaal.github.io/blog/categories/unicode/atom.xml" rel="self"/>
+  <link href="http://normangyllenhaal.github.io/"/>
+  <updated>2016-02-18T11:32:40+08:00</updated>
+  <id>http://normangyllenhaal.github.io/</id>
   <author>
     <name><![CDATA[Yang Peng]]></name>
     <email><![CDATA[me@yangpeng.tech]]></email>
@@ -15,9 +15,9 @@
   
   <entry>
     <title type="html"><![CDATA[HDF5 on Windows: UTF-8 filenames support]]></title>
-    <link href="http://yeangpeng.tech/blog/2014/11/07/hdf5-on-windows-utf-8-filenames-support/"/>
+    <link href="http://normangyllenhaal.github.io/blog/2014/11/07/hdf5-on-windows-utf-8-filenames-support/"/>
     <updated>2014-11-07T02:10:35+08:00</updated>
-    <id>http://yeangpeng.tech/blog/2014/11/07/hdf5-on-windows-utf-8-filenames-support</id>
+    <id>http://normangyllenhaal.github.io/blog/2014/11/07/hdf5-on-windows-utf-8-filenames-support</id>
     <content type="html"><![CDATA[<p>In a previous <a href="http://tschoonj.github.io/blog/2014/01/29/building-a-64-bit-version-of-hdf5-with-mingw-w64/">post</a>, I have detailed my efforts in getting HDF5 compiled on Windows 64-bit using the MinGW-w64 compiler, which is currently (still) unsupported by the HDF5 developers. Now, I am reporting on yet another problem I encountered with HDF5 on Windows, that is blatantly being ignored by the developers: UTF-8 filename support.</p>
 
 <p>This was brought to my attention by a Japanese user of my software package <a href="http://github.com/tschoonj/xmimsim">XMI-MSIM</a>, who ran into trouble running the program when logged in with a username consisting of Japanese characters. The problem could be traced back to an HDF5 file that has to be opened, which is located in a subdirectory of the user&rsquo;s homedirectory. After investigating the HDF5 code, it became quite clear that this issue is caused by the internal use of the <a href="http://msdn.microsoft.com/en-us/library/z0kc8e3z.aspx"><code>_open</code> function</a>, which is known not to support the Unicode UTF-8 characterset, necessary to represent the Japanese characters. The HDF5 website confirmed this issue with the following statement:</p>

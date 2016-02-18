@@ -2,10 +2,10 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
 
   <title><![CDATA[Category: github | Hi, I’m Yang Peng]]></title>
-  <link href="http://yeangpeng.tech/blog/categories/github/atom.xml" rel="self"/>
-  <link href="http://yeangpeng.tech/"/>
-  <updated>2016-02-18T11:29:36+08:00</updated>
-  <id>http://yeangpeng.tech/</id>
+  <link href="http://normangyllenhaal.github.io/blog/categories/github/atom.xml" rel="self"/>
+  <link href="http://normangyllenhaal.github.io/"/>
+  <updated>2016-02-18T11:32:40+08:00</updated>
+  <id>http://normangyllenhaal.github.io/</id>
   <author>
     <name><![CDATA[Yang Peng]]></name>
     <email><![CDATA[me@yangpeng.tech]]></email>
@@ -15,9 +15,9 @@
   
   <entry>
     <title type="html"><![CDATA[Gtk2 64-bit Windows Runtime Environment Installer: now on GitHub!]]></title>
-    <link href="http://yeangpeng.tech/blog/2014/09/29/gtk2-64-bit-windows-runtime-environment-installer-now-on-github/"/>
+    <link href="http://normangyllenhaal.github.io/blog/2014/09/29/gtk2-64-bit-windows-runtime-environment-installer-now-on-github/"/>
     <updated>2014-09-29T19:33:58+08:00</updated>
-    <id>http://yeangpeng.tech/blog/2014/09/29/gtk2-64-bit-windows-runtime-environment-installer-now-on-github</id>
+    <id>http://normangyllenhaal.github.io/blog/2014/09/29/gtk2-64-bit-windows-runtime-environment-installer-now-on-github</id>
     <content type="html"><![CDATA[<p>As predicted in my <a href="http://tschoonj.github.io/blog/2014/02/08/gtk2-64-bit-windows-runtime-environment-installer/">first post</a> on the Gtk2 64-bit Windows Runtime Environment Installer, I have indeed ventured into compiling Gtk (2.24.24) and all its dependencies, mainly because I was getting increasingly unhappy with the old Gtk 2.22.1 based bundle that <a href="http://www.gtk.org/download/win64.php">is being distributed</a> by the Gtk project. It was in fact this very bundle that I was using to generate the installer I announced in my first post on this subject.</p>
 
 <p>So, after spending about 10 hours of compiling (and recompiling a couple of times when I didn&rsquo;t get the configure options right) of more than a dozen software packages, I ended up with a fully working (at least until now&hellip;) collection of DLLs. I updated the code from my initial installer to include the new DLLs and uploaded the new installer <a href="http://lvserver.ugent.be/gtk-win64/">here</a>. I also uploaded a zip-file (sdk) containing all executables, DLLs, linking libraries (.dll.a) and headers, that can be used by anyone not willing to replicate my compilation effort. In fact I recommend that people using this installer to distribute the Gtk runtime along with their own program, to compile and link against this sdk, in order to avoid any link issues at runtime&hellip;</p>
@@ -30,9 +30,9 @@
   
   <entry>
     <title type="html"><![CDATA[Checking for updates using git tags]]></title>
-    <link href="http://yeangpeng.tech/blog/2013/07/08/checking-for-updates-using-git-tags/"/>
+    <link href="http://normangyllenhaal.github.io/blog/2013/07/08/checking-for-updates-using-git-tags/"/>
     <updated>2013-07-08T19:39:00+08:00</updated>
-    <id>http://yeangpeng.tech/blog/2013/07/08/checking-for-updates-using-git-tags</id>
+    <id>http://normangyllenhaal.github.io/blog/2013/07/08/checking-for-updates-using-git-tags</id>
     <content type="html"><![CDATA[<p>At some point during the development of version 2.0 of my software package <a href="http://github.com/tschoonj/xmimsim">XMI-MSIM</a>, I decided to implement a routine that would allow for the program to check if newer versions (updates) were available. This would be extremely useful for the users of the Windows and Mac OS X builds of my package, since these operating systems do not come with package-management tools as most Linux distributions do (I am staying far away from Mac App Store and Windows store as I am not willing to pay their developer fees).</p>
 
 <p>Initially I was looking at <a href="http://sparkle.andymatuschak.org">Sparkle</a>, a fantastic tool for OS X apps.
