@@ -1,0 +1,107 @@
+---
+layout: post
+title: "jvm调优"
+date: 2014-02-17 14:52:27 +0800
+comments: true
+categories: [jvm]
+---
+**首先看下jvm的常用设置参数**  
+
+1. 栈设置  
+`-Xss:`调整栈大小  
+2. 堆设置  
+`-Xms：`初始堆大小  
+`-Xmx：`最大堆大小  
+`-Xmn：`设置年轻代大小   
+`-XX:NewRatio=n:`设置年轻代和老年代的比值。  
+`-XX:SurvivorRation=n`年轻代中Eden区与两个Suvivor区的比值。注意Survivor区中有两个。如3，表示Eden:Survivor=3:2,一个Survivor区占整个年轻代的1/5  
+`-XX:MaxTenuringThreshold=0:`设置垃圾最大年龄，如果设置为0的话，则年轻代对象不经过Survivor区，直接进入老年代。，对于老年代比较多的应用，可以提高效率  
+`-XX:HeapDumpOnOutOfMemoryError` OOM时导出堆到文件  
+`-XX:HeapDumpPath` 导出OOM的路径  
+`-XX:OnOutOfMemoryError` 在OOM时，执行一个脚本  
+3.  永久区设置  
+`-XX:PermSize`  
+`-XX:MaxPermSize`
+4. 收集器设置   
+`-XX:+UseSerialGC:`设置串行收集器 新生代使用复制算法，老年代使用标记压缩算法  
+`-XX:+UseParalledlGC:`设置并行收集器 老年代依然使用串行回收  
+`-XX:+UseParalledlOldGC:`设置并行年老代收集器  
+`-XX:+UseConcMarkSweepGC:`设置并发收集器 在老年代应用 使用标记-清除算法，新生代会使用并行回收器  
+    * 并行收集器设置  
+`-XX:ParallelGCTheads=n:`设置并行收集器收集是使用的CPU数。并行收集线程数  
+`-XX:MaxGCPauseMillis=n:`设置并行收集最大暂停时间  
+`-XX:GCTimeRatio=n:`设置垃圾回收时间占程序运行时间的百分比。公式为1/(1+n)  
+    * 并发收集器设置  
+`-XX:GMSFullGCsBeforeCompaction:`此值设置运行多少次GC以后对内存空间进行压缩、整理  
+`-XX:+UseCMSCompactAtFullCollection` 打开老年代压缩，可能会影响性能，但是可以消除碎片  
+`-XX:+CMSInitiatingOccupancyFraction` 设置触发GC的阀值，对堆空间占用大小  
+`-XX:ParallelCMSThreads` 设定CMS的线程数量，一般为可用CPU数量  
+`-XX:+CMSClassUnloadingEnabled` 允许对类元数据进行回收  
+`-XX:CMSInitiatingPermOccupancyFraction：`当永久区占用率达到这一百分比时，启动CMS回收  
+`-XX:UseCMSInitiatingOccupancyOnly：`表示只在到达阀值的时候，才进行CMS回收  
+5. 垃圾回收统计信息  
+`-XX:+PrintGC` 打印GC信息  
+`-XX:+PrintGCDetails` 打印GC详细信息  
+`-XX:+PrintGCTimeStamps` 打印时间戳  
+`-XX:+PrintHeapAtGC` 每一次GC以后，都打印堆信息  
+`-XX:+TraceClassLoading` 监控类加载  
+`-XX:+PrintClassHistogram` 按下Ctrl+Break后，打印所有类信息  
+`-Xloggc:filename`  
+6. 锁设置  
+   - 偏向锁  
+`-XX:+UseBiasedLocking`  –jdk1.6 默认启用 在竞争激烈的场合，偏向锁会增加系统负担 
+只要没有竞争，获得偏向锁的线程，在将来进入同步块，不需要做同步
+当其他线程请求相同的锁时，偏向模式结束  
+`-XX:BiasedLockingStartupDelay=0` 偏向锁开启时间  
+`-XX:-UseBiasedLocking` 移除偏向锁  
+   - 轻量锁  
+如果轻量级锁失败，表示存在竞争，升级为重量级锁（常规锁），在没有锁竞争的前提下，减少传统锁使用OS互斥量产生的性能损耗，在竞争激烈时，轻量级锁会多做很多额外操作，导致性能下降  
+   - 自旋锁  
+当竞争存在时，如果线程可以很快获得锁，那么可以不在OS层挂起线程，让线程做几个空操作（自旋）
+JDK1.6中-XX:+UseSpinning开启
+JDK1.7中，去掉此参数，改为内置实现
+如果同步块很长，自旋失败，会降低系统性能
+如果同步块很短，自旋成功，节省线程挂起切换时间，提升系统性能  
+   - 内置于JVM中的获取锁的优化方法和获取锁的步骤  
+–偏向锁可用会先尝试偏向锁
+–轻量级锁可用会先尝试轻量级锁
+–以上都失败，尝试自旋锁
+–再失败，尝试普通锁，使用OS互斥量在操作系统层挂起
+
+**下面看下常用设置经验**
+<!-- more -->
+- 堆大小设置经验  
+初始堆和最大堆设置为一样  
+最大不超过4G  
+年轻代推荐为整个堆的3/8  
+幸存代占新生代的1/10   
+
+- 栈大小设置经验  
+默认每个线程的堆栈大小为1M，在相同物理内存下，减小整个值能生成更多的线程。但操作系统对一个进程能的线程数还是有限制的，不能无限生成，经验值在3000-5000左右
+- 回收器选择  
+JVM会根据当前系统进行判断  
+吞吐量优先的并行收集器，使用与科学计算和后台处理  
+响应时间优先的并发收集器，保证系统的响应时间，减少牢记收集时的停顿时间，由于并发收集器不对内存空间进行压缩、整理，所以运行一段时间以后产生碎片，使得运行效率降低.
+
+- 锁优化  
+1.减少锁持有时间，对不需要锁的的代码不加锁  
+2.减小锁粒度   
+3.锁分离 读写分离 LinkedBlockingQueue  
+4.锁粗化 避免频繁获得释放锁  
+5.锁消除  -XX:+DoEscapeAnalysis 逃逸分析  -XX:+EliminateLocks 锁消除  
+6.无锁   
+	6.1 CAS(Compare And Swap)，非阻塞的同步 比较交换  
+ 	6.2 在应用层面判断多线程的干扰，如果有干扰，则通知线程重试，java.util.concurrent.atomic包使用无锁实现，性能高于一般的有锁操作
+
+**Jvm常见问题：**  
+1.年老代内存泄露
+由集合对象引起
+
+2.持久代被占满
+常由大量反射加载造成
+
+3.栈溢出
+递归循环调用
+
+4.系统内存被占满
+没有足够的资源来产生这个线程造成
