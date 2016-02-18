@@ -1,0 +1,396 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+
+  <title><![CDATA[Category: hadoop | Hi, I’m Yang Peng]]></title>
+  <link href="http://yeangpeng.tech/blog/categories/hadoop/atom.xml" rel="self"/>
+  <link href="http://yeangpeng.tech/"/>
+  <updated>2016-02-18T15:37:18+08:00</updated>
+  <id>http://yeangpeng.tech/</id>
+  <author>
+    <name><![CDATA[Yang Peng]]></name>
+    <email><![CDATA[me@yangpeng.tech]]></email>
+  </author>
+  <generator uri="http://octopress.org/">Octopress</generator>
+
+  
+  <entry>
+    <title type="html"><![CDATA[centos6上安装Hadoop和HBase]]></title>
+    <link href="http://yeangpeng.tech/blog/2015/05/27/hadoop-hbase/"/>
+    <updated>2015-05-27T14:01:57+08:00</updated>
+    <id>http://yeangpeng.tech/blog/2015/05/27/hadoop-hbase</id>
+    <content type="html"><![CDATA[<h3>安装前的准备</h3>
+
+<p>操作系统：CentOS 6.5 64位</p>
+
+<p>在linux环境安装Hadoop之前，我们需要使用到ssh，所以要先安装ssh，并且创建一个hadoop用户</p>
+
+<p><strong>备注：</strong> 下面所有的命令中，以#开头的表示是root用户，以$开头的是普通用户</p>
+
+<h4>安装SSH</h4>
+
+<p>先切换到root用户，执行下列步骤
+<code>
+rpm -qa |grep ssh  #检查是否装了SSH包
+yum install openssh-server  #安装ssh
+chkconfig --list sshd #检查SSHD是否设置为开机启动
+chkconfig --level 2345 sshd on  #如果没设置启动就设置下.
+service sshd restart  #重新启动
+</code></p>
+
+<h4>创建hadoop用户<!--more--></h4>
+
+<pre><code>$ su
+password:
+# useradd hadoop
+# passwd hadoop
+New passwd:
+Retype new passwd
+</code></pre>
+
+<h4>生成pub-key</h4>
+
+<p>切换到hadoop用户后，执行
+<code>
+$ ssh-keygen -t rsa
+$ cat ~/.ssh/id_rsa.pub &gt;&gt; ~/.ssh/authorized_keys
+$ chmod 0600 ~/.ssh/authorized_keys
+</code>
+然后确认下是否能正常使用ssh连接
+<code>
+ssh localhost
+</code></p>
+
+<h3>安装JDK1.7</h3>
+
+<p>进入oracle官网<a href="http://www.oracle.com/technetwork/java/javase/downloads/jdk7-downloads-1880260.html">http://www.oracle.com/technetwork/java/javase/downloads/jdk7-downloads-1880260.html</a></p>
+
+<p>下载jdk-7u79-linux-x64.gz，然后执行：
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>$ tar zxf jdk-7u79-linux-x64.gz
+</span><span class='line'>$ ls
+</span><span class='line'>jdk1.7.0_79 jdk-7u79-linux-x64.gz
+</span><span class='line'>$ su
+</span><span class='line'>password:&lt;/p&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;h1&gt;mv jdk1.7.0_79 /usr/local/&lt;/h1&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;h1&gt;exit&lt;/h1&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;pre&gt;&lt;code&gt;打开~/.bashrc文件，写入JAVA_HOME环境变量
+</span><span class='line'>&lt;/code&gt;&lt;/pre&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;p&gt;export JAVA_HOME=/usr/local/jdk1.7.0_79
+</span><span class='line'>export PATH= $PATH:$JAVA_HOME/bin
+</span><span class='line'>&lt;code&gt;``
+</span><span class='line'>保存刷新下：&lt;/code&gt;$ source ~/.bashrc`&lt;/p&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;p&gt;切换到root用户，然后执行下面的语句确保JDK版本更改完成</span></code></pre></td></tr></table></div></figure></p>
+
+<h1>alternatives &ndash;install /usr/bin/java java /usr/local/jdk1.7.0_79/bin/java 2</h1>
+
+<h1>alternatives &ndash;install /usr/bin/javac javac /usr/local/jdk1.7.0_79/bin/javac 2</h1>
+
+<h1>alternatives &ndash;install /usr/bin/jar jar /usr/local/jdk1.7.0_79/bin/jar 2</h1>
+
+<h1>alternatives &ndash;set java /usr/local/jdk1.7.0_79/bin/java</h1>
+
+<h1>alternatives &ndash;set javac /usr/local/jdk1.7.0_79/bin/javac</h1>
+
+<h1>alternatives &ndash;set jar /usr/local/jdk1.7.0_79/bin/jar</h1>
+
+<pre><code>最后执行下：`java -version`看看是不是已经成功安装了JDK7
+
+### 安装配置Hadoop
+
+#### 下载Hadoophadoop2.6.0下载地址：&lt;http://apache.fayea.com/hadoop/common/stable/hadoop-2.6.0.tar.gz&gt;
+</code></pre>
+
+<p>$ su
+password:</p>
+
+<h1>cd /usr/local</h1>
+
+<h1>wget <a href="http://apache.fayea.com/hadoop/common/stable/hadoop-2.6.0.tar.gz">http://apache.fayea.com/hadoop/common/stable/hadoop-2.6.0.tar.gz</a></h1>
+
+<h1>tar xzf hadoop-2.6.0.tar.gz</h1>
+
+<h1>mv hadoop-2.6.0 hadoop</h1>
+
+<h1>exit</h1>
+
+<pre><code>hadoop有很多种模式，本篇我们演示的是伪分布式模式，包括后面的HBase也选择这种模式。
+
+#### 配置Hadoop环境
+第一步，配置环境变量
+
+打开~/.bashrc文件，写入如下内容
+</code></pre>
+
+<p>export HADOOP_HOME=/usr/local/hadoop
+export HADOOP_MAPRED_HOME=$HADOOP_HOME
+export HADOOP_COMMON_HOME=$HADOOP_HOME
+export HADOOP_HDFS_HOME=$HADOOP_HOME
+export YARN_HOME=$HADOOP_HOME
+export HADOOP_COMMON_LIB_NATIVE_DIR=$HADOOP_HOME/lib/native
+export PATH=$PATH:$HADOOP_HOME/sbin:$HADOOP_HOME/bin
+export HADOOP_INSTALL=$HADOOP_HOME
+<code>
+然后应用设置
+</code>
+$ source ~/.bashrc
+```
+第二步，hadoop配置文件</p>
+
+<p>hadoop的配置文件都放在"$HADOOP_HOME/etc/hadoop"目录中，
+你可以根据自己的需要来修改它们。</p>
+
+<p>在此之前，还需要修改下hadoop-env.sh，更改其中的JAVA_HOME变量
+<code>
+vim /usr/local/hadoop/etc/hadoop/hadoop-env.sh
+</code>
+然后修改JAVA_HOME为真实的目录
+<code>
+export JAVA_HOME=/usr/local/jdk1.7.0_79
+</code>
+接下来我们去到hadoop的配置文件目录
+<code>
+$ cd $HADOOP_HOME/etc/hadoop
+</code>
+1. 首先打开core-site.xml，写入如下配置</p>
+
+<pre><code class="xml">&lt;configuration&gt;
+    &lt;property&gt;
+        &lt;name&gt;hadoop.tmp.dir&lt;/name&gt;
+        &lt;value&gt;/usr/local/hadoop/tmp&lt;/value&gt;
+    &lt;/property&gt;
+    &lt;property&gt;
+        &lt;name&gt;fs.defaultFS&lt;/name&gt;
+        &lt;value&gt;hdfs://localhost:9000&lt;/value&gt;
+    &lt;/property&gt;
+&lt;/configuration&gt;
+</code></pre>
+
+<p>2. 然后打开hdfs-site.xml，写入如下配置</p>
+
+<pre><code class="xml">&lt;configuration&gt;
+    &lt;property&gt;
+        &lt;name&gt;dfs.replication&lt;/name&gt;
+        &lt;value&gt;1&lt;/value&gt;
+    &lt;/property&gt;
+    &lt;property&gt;
+        &lt;name&gt;dfs.name.dir&lt;/name&gt;
+        &lt;value&gt;file:///home/hadoop/hadoopinfra/hdfs/namenode&lt;/value&gt;
+    &lt;/property&gt;
+    &lt;property&gt;
+        &lt;name&gt;dfs.data.dir&lt;/name&gt;
+        &lt;value&gt;file:///home/hadoop/hadoopinfra/hdfs/datanode&lt;/value&gt;
+    &lt;/property&gt;
+    &lt;property&gt;
+        &lt;name&gt;dfs.permissions&lt;/name&gt;
+        &lt;value&gt;false&lt;/value&gt;
+    &lt;/property&gt;
+&lt;/configuration&gt;
+</code></pre>
+
+<p>上面的文件夹需要我们手动来创建，那么我们创建下就行了
+<code>
+$ mkdir -p /home/hadoop/hadoopinfra/hdfs/namenode
+$ mkdir -p /home/hadoop/hadoopinfra/hdfs/datanode
+</code></p>
+
+<p>3. 然后打开yarn-site.xml文件，写入如下配置</p>
+
+<pre><code class="xml">&lt;configuration&gt;
+    &lt;property&gt;
+        &lt;name&gt;yarn.nodemanager.aux-services&lt;/name&gt;
+        &lt;value&gt;mapreduce_shuffle&lt;/value&gt;
+    &lt;/property&gt;
+    &lt;property&gt;
+        &lt;name&gt;yarn.resourcemanager.scheduler.address&lt;/name&gt;
+        &lt;value&gt;localhost:54313&lt;/value&gt;
+    &lt;/property&gt;
+&lt;/configuration&gt;
+</code></pre>
+
+<p>4. 配置mapred-site.xml，先重命名
+<code>
+$ cp mapred-site.xml.template mapred-site.xml
+</code>
+打开mapred-site.xml文件，写入如下配置</p>
+
+<pre><code class="xml">&lt;configuration&gt;
+    &lt;property&gt;
+        &lt;name&gt;yarn.nodemanager.aux-services&lt;/name&gt;
+        &lt;value&gt;mapreduce_shuffle&lt;/value&gt;
+    &lt;/property&gt;
+&lt;/configuration&gt;
+</code></pre>
+
+<h4>确认Hadoop的安装</h4>
+
+<p>1. NameNode确认
+<code>
+$ cd ~
+$ hdfs namenode -format
+</code>
+结果应该类似下面</p>
+
+<pre><code>STARTUP_MSG: Starting NameNode
+STARTUP_MSG:   host = centos00/127.0.0.1
+STARTUP_MSG:   args = [-format]
+STARTUP_MSG:   version = 2.6.0
+...
+/************************************************************
+SHUTDOWN_MSG: Shutting down NameNode at centos00/127.0.0.1
+************************************************************/
+</code></pre>
+
+<p>2. Hadoop dfs确认
+<code>
+$ start-dfs.sh
+</code>
+结果应该类似下面</p>
+
+<pre><code>Starting namenodes on [localhost]
+localhost: starting namenode, logging to ....out
+localhost: starting datanode, logging to ....out
+Starting secondary namenodes [0.0.0.0]
+The authenticity of host '0.0.0.0 (0.0.0.0)' can't be established.
+RSA key fingerprint is fd:01:fc:f2:53:a0:58:8e:96:9c:5f:f2:6e:5b:69:1a.
+Are you sure you want to continue connecting (yes/no)? yes
+0.0.0.0: Warning: Permanently added '0.0.0.0' (RSA) to the list of known hosts.
+0.0.0.0: starting secondarynamenode, logging to ...
+</code></pre>
+
+<p>3. Yarn Srcipt确认
+<code>
+$ start-yarn.sh
+</code>
+结果应该类似下面这样</p>
+
+<pre><code>starting yarn daemons
+starting resourcemanager, logging to ....out
+localhost: starting nodemanager, logging to ....out
+</code></pre>
+
+<p>4. 浏览器访问Hadoop</p>
+
+<p>默认访问Hadoop的端口是50070，在浏览器中打开链接<a href="http://localhost:50070">http://localhost:50070</a>来访问Hadoop服务。</p>
+
+<p>5. 浏览器确认应用集群</p>
+
+<p>默认访问应用集群的端口号是8088，在浏览器中打开链接<a href="http://localhost:8088">http://localhost:8088</a>来确认下。</p>
+
+<h3>安装HBase</h3>
+
+<p>你可以在三种模式下安装HBase：单机模式、伪分布式模式、全分布式模式。
+下面我们演示在伪分布式模式下HBase的安装和配置。</p>
+
+<h4>下载HBase</h4>
+
+<pre><code>$ su
+# cd /usr/local/
+# wget http://apache.fayea.com/hbase/hbase-0.98.12/hbase-0.98.12-hadoop2-bin.tar.gz
+# tar -zxvf hbase-0.98.12-hadoop2-bin.tar.gz
+# mv hbase-0.98.12-hadoop2 hbase
+# chown -R hadoop:hadoop /usr/local/hbase
+</code></pre>
+
+<h4>配置hbase-site.xml</h4>
+
+<pre><code>su hadoop
+$ cd /usr/local/hbase/conf
+</code></pre>
+
+<p>然后打开hbase-env.sh文件，修改如下
+<code>
+export JAVA_HOME=/usr/local/jdk1.7.0_79
+</code>
+修改hbase-site.xml文件，如下</p>
+
+<pre><code class="xml">&lt;property&gt;
+    &lt;name&gt;hbase.rootdir&lt;/name&gt;
+    &lt;value&gt;hdfs://localhost:9000/hbase&lt;/value&gt;
+&lt;/property&gt;
+
+&lt;property&gt;
+    &lt;name&gt;hbase.zookeeper.property.dataDir&lt;/name&gt;
+    &lt;value&gt;/home/hadoop/zookeeper&lt;/value&gt;
+&lt;/property&gt;
+
+&lt;property&gt;
+    &lt;name&gt;hbase.cluster.distributed&lt;/name&gt;
+    &lt;value&gt;true&lt;/value&gt;
+&lt;/property&gt;
+</code></pre>
+
+<p>编辑/etc/profile，增加HBASE_HOME环境变量
+<code>
+export HBASE_HOME=/usr/local/hbase
+export PATH=$PATH:$HBASE_HOME/bin
+</code>
+应用更改。
+<code>
+source /etc/profile
+</code>
+OK，现在为止，HBase的安装和配置都已经完成了。</p>
+
+<p>现在你可以通过执行start-hbase.sh来启动HBase
+<code>
+$ cd /usr/local/hbase/bin
+$ ./start-hbase.sh
+</code>
+然后执行<code>jps</code>命令应该可以看到HMaster和HRegionServer这两个进程。类似下面</p>
+
+<pre><code>10941 DataNode
+13744 HQuorumPeer
+14207 Jps
+11126 SecondaryNameNode
+11276 ResourceManager
+10840 NameNode
+13843 HMaster
+10016 HRegionServer
+11378 NodeManager
+</code></pre>
+
+<p>如果没有看到，可以查看日志<code>/usr/local/hbase/logs/hbase-hadoop-master-xx.log</code></p>
+
+<h4>在HDFS中检查HBase目录</h4>
+
+<p>HBase会在HDFS中创建自己的目录，在hadoop目录下面执行：
+<code>
+$ ./bin/hadoop fs -ls /hbase
+</code>
+显示如下</p>
+
+<pre><code>drwxr-xr-x   - hadoop supergroup          0 2015-04-24 16:06 /hbase/.tmp
+drwxr-xr-x   - hadoop supergroup          0 2015-04-24 16:06 /hbase/WALs
+drwxr-xr-x   - hadoop supergroup          0 2015-04-24 16:06 /hbase/data
+-rw-r--r--   1 hadoop supergroup         42 2015-04-24 16:06 /hbase/hbase.id
+-rw-r--r--   1 hadoop supergroup          7 2015-04-24 16:06 /hbase/hbase.version
+drwxr-xr-x   - hadoop supergroup          0 2015-04-24 16:06 /hbase/oldWALs
+</code></pre>
+
+<p>那么恭喜你，配置成功了！</p>
+]]></content>
+  </entry>
+  
+</feed>

@@ -1,0 +1,160 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+
+  <title><![CDATA[Category: 归并排序 | Hi, I’m Yang Peng]]></title>
+  <link href="http://yeangpeng.tech/blog/categories/gui-bing-pai-xu/atom.xml" rel="self"/>
+  <link href="http://yeangpeng.tech/"/>
+  <updated>2016-02-18T15:37:18+08:00</updated>
+  <id>http://yeangpeng.tech/</id>
+  <author>
+    <name><![CDATA[Yang Peng]]></name>
+    <email><![CDATA[me@yangpeng.tech]]></email>
+  </author>
+  <generator uri="http://octopress.org/">Octopress</generator>
+
+  
+  <entry>
+    <title type="html"><![CDATA[归并排序中对小数组采用插入排序]]></title>
+    <link href="http://yeangpeng.tech/blog/2015/04/24/merge-sort/"/>
+    <updated>2015-04-24T10:47:35+08:00</updated>
+    <id>http://yeangpeng.tech/blog/2015/04/24/merge-sort</id>
+    <content type="html"><![CDATA[<p>纯归并排序的复杂度为O(nlgn)，而纯插入排序的时间复杂度为O(n<sup>2</sup>)。数据量很大的时候采用归并排序。</p>
+
+<p>但是在n较小的时候插入排序可能运行的会更快点。因此在归并排序中当子问题变得足够小时，
+采用插入排序来使得递归的叶子变粗可以加快排序速度。那么这个足够小到底怎么去衡量呢？ 请看下面：</p>
+
+<p>这么几个我不证明了，比较简单：</p>
+
+<ol>
+<li>插入排序最坏情况下可以在O(nk)时间内排序每个长度为k的n/k个子列表
+<em>. 在最坏情况下可在O(nlg(n/k))的时间内合并这些子表
+</em>. 修订后的算法的最坏情况运行时间复杂度是O(nk + nlg(n/k))</li>
+</ol>
+
+
+<p>那么，O(nk+nlg(n/k))=O(nlgn).只能最大是k=O(lgn).等式左边中第一项是高阶项。
+k如果大于lgn,则比归并排序复杂度大了。
+左边可以写成nk+nlgn-nlgk，k等于lgn时，就是2nlgn-nlglgn.忽略恒定系数，则与归并排序是一样的。
+最后结论： k &lt; lg(n)的时候，使用插入排序。<!--more--></p>
+
+<p>首先是插入排序的实现，这个比较简单：
+<code>python
+def insertSort(seq):
+    for j in range(1, len(seq)):
+        key = seq[j]
+        # insert arrays[j] into the sorted seq[0...j-1]
+        i = j - 1
+        while i &gt;= 0 and seq[i] &gt; key:
+            seq[i + 1] = seq[i]
+            i -= 1
+        seq[i + 1] = key
+</code>
+然后是利用了插入排序的归并排序算法：
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+<span class='line-number'>34</span>
+<span class='line-number'>35</span>
+<span class='line-number'>36</span>
+<span class='line-number'>37</span>
+<span class='line-number'>38</span>
+<span class='line-number'>39</span>
+<span class='line-number'>40</span>
+<span class='line-number'>41</span>
+<span class='line-number'>42</span>
+<span class='line-number'>43</span>
+<span class='line-number'>44</span>
+<span class='line-number'>45</span>
+<span class='line-number'>46</span>
+<span class='line-number'>47</span>
+<span class='line-number'>48</span>
+<span class='line-number'>49</span>
+<span class='line-number'>50</span>
+<span class='line-number'>51</span>
+</pre></td><td class='code'><pre><code class='python'><span class='line'><span class="kn">from</span> <span class="nn">math</span> <span class="kn">import</span> <span class="n">log</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;&lt;</span><span class="n">strong</span><span class="o">&gt;</span><span class="n">author</span><span class="o">&lt;/</span><span class="n">strong</span><span class="o">&gt;</span> <span class="o">=</span> <span class="o">&amp;</span><span class="n">lsquo</span><span class="p">;</span><span class="n">Xiong</span> <span class="n">Neng</span><span class="o">&amp;</span><span class="n">rsquo</span><span class="p">;</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="k">def</span> <span class="nf">mergeSort</span><span class="p">(</span><span class="n">seq</span><span class="p">):</span>
+</span><span class='line'>    <span class="n">mergeSortRange</span><span class="p">(</span><span class="n">seq</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">seq</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="n">log</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">seq</span><span class="p">))</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="k">def</span> <span class="nf">mergeOrderedSeq</span><span class="p">(</span><span class="n">seq</span><span class="p">,</span> <span class="n">left</span><span class="p">,</span> <span class="n">middle</span><span class="p">,</span> <span class="n">right</span><span class="p">):</span>
+</span><span class='line'>    <span class="o">&amp;</span><span class="n">ldquo</span><span class="p">;</span><span class="o">&amp;</span><span class="n">rdquo</span><span class="p">;</span><span class="o">&amp;</span><span class="n">ldquo</span><span class="p">;</span>
+</span><span class='line'>    <span class="n">seq</span><span class="p">:</span> <span class="err">待排序序列</span>
+</span><span class='line'>    <span class="n">left</span> <span class="o">&amp;</span><span class="n">lt</span><span class="p">;</span><span class="o">=</span> <span class="n">middle</span> <span class="o">&amp;</span><span class="n">lt</span><span class="p">;</span><span class="o">=</span> <span class="n">right</span>
+</span><span class='line'>    <span class="err">子数组</span><span class="n">seq</span><span class="p">[</span><span class="n">left</span><span class="o">..</span><span class="n">middle</span><span class="p">]</span><span class="err">和</span><span class="n">seq</span><span class="p">[</span><span class="n">middle</span><span class="o">+</span><span class="mf">1.</span><span class="o">.</span><span class="n">right</span><span class="p">]</span><span class="err">都是排好序的</span>
+</span><span class='line'>    <span class="err">该排序的时间复杂度为</span><span class="n">O</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
+</span><span class='line'>    <span class="o">&amp;</span><span class="n">rdquo</span><span class="p">;</span><span class="o">&amp;</span><span class="n">ldquo</span><span class="p">;</span><span class="o">&amp;</span><span class="n">rdquo</span><span class="p">;</span>
+</span><span class='line'>    <span class="n">tempSeq</span> <span class="o">=</span> <span class="p">[]</span>
+</span><span class='line'>    <span class="n">i</span> <span class="o">=</span> <span class="n">left</span>
+</span><span class='line'>    <span class="n">j</span> <span class="o">=</span> <span class="n">middle</span> <span class="o">+</span> <span class="mi">1</span>
+</span><span class='line'>    <span class="k">while</span> <span class="n">i</span> <span class="o">&amp;</span><span class="n">lt</span><span class="p">;</span><span class="o">=</span> <span class="n">middle</span> <span class="ow">and</span> <span class="n">j</span> <span class="o">&amp;</span><span class="n">lt</span><span class="p">;</span><span class="o">=</span> <span class="n">right</span><span class="p">:</span>
+</span><span class='line'>        <span class="k">if</span> <span class="n">seq</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">&amp;</span><span class="n">lt</span><span class="p">;</span><span class="o">=</span> <span class="n">seq</span><span class="p">[</span><span class="n">j</span><span class="p">]:</span>
+</span><span class='line'>            <span class="n">tempSeq</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">seq</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+</span><span class='line'>            <span class="n">i</span> <span class="o">+=</span> <span class="mi">1</span>
+</span><span class='line'>        <span class="k">else</span><span class="p">:</span>
+</span><span class='line'>            <span class="n">tempSeq</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">seq</span><span class="p">[</span><span class="n">j</span><span class="p">])</span>
+</span><span class='line'>            <span class="n">j</span> <span class="o">+=</span> <span class="mi">1</span>
+</span><span class='line'>    <span class="k">if</span> <span class="n">i</span> <span class="o">&amp;</span><span class="n">lt</span><span class="p">;</span><span class="o">=</span> <span class="n">middle</span><span class="p">:</span>
+</span><span class='line'>        <span class="n">tempSeq</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">seq</span><span class="p">[</span><span class="n">i</span><span class="p">:</span><span class="n">middle</span> <span class="o">+</span> <span class="mi">1</span><span class="p">])</span>
+</span><span class='line'>    <span class="k">else</span><span class="p">:</span>
+</span><span class='line'>        <span class="n">tempSeq</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">seq</span><span class="p">[</span><span class="n">j</span><span class="p">:</span><span class="n">right</span> <span class="o">+</span> <span class="mi">1</span><span class="p">])</span>
+</span><span class='line'>    <span class="n">seq</span><span class="p">[</span><span class="n">left</span><span class="p">:</span><span class="n">right</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">tempSeq</span><span class="p">[:]</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="k">def</span> <span class="nf">mergeSortRange</span><span class="p">(</span><span class="n">seq</span><span class="p">,</span> <span class="n">start</span><span class="p">,</span> <span class="n">end</span><span class="p">,</span> <span class="n">threshold</span><span class="p">):</span>
+</span><span class='line'>    <span class="o">&amp;</span><span class="n">ldquo</span><span class="p">;</span><span class="o">&amp;</span><span class="n">rdquo</span><span class="p">;</span><span class="o">&amp;</span><span class="n">ldquo</span><span class="p">;</span>
+</span><span class='line'>    <span class="err">归并排序一个序列的子序列</span>
+</span><span class='line'>    <span class="n">start</span><span class="p">:</span> <span class="err">子序列的</span><span class="n">start</span><span class="err">下标</span>
+</span><span class='line'>    <span class="n">end</span><span class="p">:</span> <span class="err">子序列的</span><span class="n">end</span><span class="err">下标</span>
+</span><span class='line'>    <span class="n">threshold</span><span class="p">:</span> <span class="err">待排序长度低于这个值，就采用插入排序</span>
+</span><span class='line'>    <span class="o">&amp;</span><span class="n">rdquo</span><span class="p">;</span><span class="o">&amp;</span><span class="n">ldquo</span><span class="p">;</span><span class="o">&amp;</span><span class="n">rdquo</span><span class="p">;</span>
+</span><span class='line'>    <span class="k">if</span> <span class="n">end</span> <span class="o">-</span> <span class="n">start</span> <span class="o">&amp;</span><span class="n">lt</span><span class="p">;</span> <span class="n">threshold</span><span class="p">:</span>
+</span><span class='line'>        <span class="n">tempSeq</span> <span class="o">=</span> <span class="n">seq</span><span class="p">[</span><span class="n">start</span><span class="p">:</span> <span class="n">end</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span>
+</span><span class='line'>        <span class="n">insertSort</span><span class="p">(</span><span class="n">tempSeq</span><span class="p">)</span>
+</span><span class='line'>        <span class="n">seq</span><span class="p">[</span><span class="n">start</span><span class="p">:</span> <span class="n">end</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">tempSeq</span><span class="p">[:]</span>
+</span><span class='line'>    <span class="k">elif</span> <span class="n">start</span> <span class="o">&amp;</span><span class="n">lt</span><span class="p">;</span> <span class="n">end</span><span class="p">:</span>  <span class="c"># 如果start &gt;= end就终止递归调用</span>
+</span><span class='line'>        <span class="n">middle</span> <span class="o">=</span> <span class="p">(</span><span class="n">start</span> <span class="o">+</span> <span class="n">end</span><span class="p">)</span> <span class="o">/</span> <span class="mi">2</span>
+</span><span class='line'>        <span class="n">mergeSortRange</span><span class="p">(</span><span class="n">seq</span><span class="p">,</span> <span class="n">start</span><span class="p">,</span> <span class="n">middle</span><span class="p">,</span> <span class="n">threshold</span><span class="p">)</span>  <span class="c"># 排好左边的一半</span>
+</span><span class='line'>        <span class="n">mergeSortRange</span><span class="p">(</span><span class="n">seq</span><span class="p">,</span> <span class="n">middle</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="n">end</span><span class="p">,</span> <span class="n">threshold</span><span class="p">)</span>  <span class="c"># 再排好右边的一半</span>
+</span><span class='line'>        <span class="n">mergeOrderedSeq</span><span class="p">(</span><span class="n">seq</span><span class="p">,</span> <span class="n">start</span><span class="p">,</span> <span class="n">middle</span><span class="p">,</span> <span class="n">end</span><span class="p">)</span>  <span class="c"># 最后合并排序结果&lt;/p&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="k">if</span> <span class="o">&lt;</span><span class="n">strong</span><span class="o">&gt;</span><span class="n">name</span><span class="o">&lt;/</span><span class="n">strong</span><span class="o">&gt;</span> <span class="o">==</span> <span class="o">&amp;</span><span class="n">lsquo</span><span class="p">;</span><span class="o">&lt;</span><span class="n">strong</span><span class="o">&gt;</span><span class="n">main</span><span class="o">&lt;/</span><span class="n">strong</span><span class="o">&gt;&amp;</span><span class="n">rsquo</span><span class="p">;:</span>
+</span><span class='line'>    <span class="n">test</span> <span class="o">=</span> <span class="p">[</span><span class="mi">4</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">6</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">7</span><span class="p">,</span> <span class="mi">9</span><span class="p">,</span> <span class="mi">8</span><span class="p">]</span>
+</span><span class='line'>    <span class="n">mergeSort</span><span class="p">(</span><span class="n">test</span><span class="p">)</span>
+</span><span class='line'>    <span class="k">print</span><span class="p">(</span><span class="n">test</span><span class="p">)</span>
+</span></code></pre></td></tr></table></div></figure>
+比较清楚，应该不需要再多解释了。</p>
+]]></content>
+  </entry>
+  
+</feed>

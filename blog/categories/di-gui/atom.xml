@@ -1,0 +1,379 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+
+  <title><![CDATA[Category: 递归 | Hi, I’m Yang Peng]]></title>
+  <link href="http://yeangpeng.tech/blog/categories/di-gui/atom.xml" rel="self"/>
+  <link href="http://yeangpeng.tech/"/>
+  <updated>2016-02-18T15:37:18+08:00</updated>
+  <id>http://yeangpeng.tech/</id>
+  <author>
+    <name><![CDATA[Yang Peng]]></name>
+    <email><![CDATA[me@yangpeng.tech]]></email>
+  </author>
+  <generator uri="http://octopress.org/">Octopress</generator>
+
+  
+  <entry>
+    <title type="html"><![CDATA[利用递归算法并行化解决谜题框架]]></title>
+    <link href="http://yeangpeng.tech/blog/2015/04/14/concurrent-recursive/"/>
+    <updated>2015-04-14T15:41:16+08:00</updated>
+    <id>http://yeangpeng.tech/blog/2015/04/14/concurrent-recursive</id>
+    <content type="html"><![CDATA[<p>我们将谜题定义为：包含一个初始位置，一个目标位置，以及用于判断是否是有效移动的规则集。</p>
+
+<p>规则集包含两部分：计算从指定位置开始的所有合法移动，以及每次移动的结果位置。</p>
+
+<p>下面先给出表示谜题的抽象类，其中的类型参数P和M表示位置类和移动类。根据这个接口，我们可以写一个简单的串行求解程序，该程序将在谜题空间Puzzle Space中查找，直到找到一个解答或者找遍了整个空间都没有发现答案。注：一个移动M代表一步
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+<span class='line-number'>34</span>
+<span class='line-number'>35</span>
+<span class='line-number'>36</span>
+<span class='line-number'>37</span>
+<span class='line-number'>38</span>
+<span class='line-number'>39</span>
+<span class='line-number'>40</span>
+<span class='line-number'>41</span>
+<span class='line-number'>42</span>
+<span class='line-number'>43</span>
+<span class='line-number'>44</span>
+<span class='line-number'>45</span>
+<span class='line-number'>46</span>
+<span class='line-number'>47</span>
+<span class='line-number'>48</span>
+<span class='line-number'>49</span>
+<span class='line-number'>50</span>
+<span class='line-number'>51</span>
+<span class='line-number'>52</span>
+<span class='line-number'>53</span>
+<span class='line-number'>54</span>
+<span class='line-number'>55</span>
+<span class='line-number'>56</span>
+<span class='line-number'>57</span>
+<span class='line-number'>58</span>
+<span class='line-number'>59</span>
+<span class='line-number'>60</span>
+<span class='line-number'>61</span>
+<span class='line-number'>62</span>
+<span class='line-number'>63</span>
+<span class='line-number'>64</span>
+<span class='line-number'>65</span>
+<span class='line-number'>66</span>
+<span class='line-number'>67</span>
+<span class='line-number'>68</span>
+<span class='line-number'>69</span>
+<span class='line-number'>70</span>
+<span class='line-number'>71</span>
+<span class='line-number'>72</span>
+<span class='line-number'>73</span>
+<span class='line-number'>74</span>
+<span class='line-number'>75</span>
+<span class='line-number'>76</span>
+<span class='line-number'>77</span>
+<span class='line-number'>78</span>
+<span class='line-number'>79</span>
+<span class='line-number'>80</span>
+<span class='line-number'>81</span>
+<span class='line-number'>82</span>
+<span class='line-number'>83</span>
+<span class='line-number'>84</span>
+<span class='line-number'>85</span>
+<span class='line-number'>86</span>
+<span class='line-number'>87</span>
+<span class='line-number'>88</span>
+<span class='line-number'>89</span>
+<span class='line-number'>90</span>
+<span class='line-number'>91</span>
+<span class='line-number'>92</span>
+<span class='line-number'>93</span>
+<span class='line-number'>94</span>
+<span class='line-number'>95</span>
+<span class='line-number'>96</span>
+<span class='line-number'>97</span>
+<span class='line-number'>98</span>
+<span class='line-number'>99</span>
+<span class='line-number'>100</span>
+<span class='line-number'>101</span>
+<span class='line-number'>102</span>
+<span class='line-number'>103</span>
+<span class='line-number'>104</span>
+<span class='line-number'>105</span>
+<span class='line-number'>106</span>
+<span class='line-number'>107</span>
+<span class='line-number'>108</span>
+<span class='line-number'>109</span>
+<span class='line-number'>110</span>
+<span class='line-number'>111</span>
+<span class='line-number'>112</span>
+<span class='line-number'>113</span>
+<span class='line-number'>114</span>
+<span class='line-number'>115</span>
+<span class='line-number'>116</span>
+<span class='line-number'>117</span>
+<span class='line-number'>118</span>
+<span class='line-number'>119</span>
+<span class='line-number'>120</span>
+<span class='line-number'>121</span>
+<span class='line-number'>122</span>
+<span class='line-number'>123</span>
+<span class='line-number'>124</span>
+<span class='line-number'>125</span>
+<span class='line-number'>126</span>
+<span class='line-number'>127</span>
+<span class='line-number'>128</span>
+<span class='line-number'>129</span>
+<span class='line-number'>130</span>
+<span class='line-number'>131</span>
+<span class='line-number'>132</span>
+<span class='line-number'>133</span>
+<span class='line-number'>134</span>
+<span class='line-number'>135</span>
+<span class='line-number'>136</span>
+<span class='line-number'>137</span>
+<span class='line-number'>138</span>
+<span class='line-number'>139</span>
+<span class='line-number'>140</span>
+<span class='line-number'>141</span>
+<span class='line-number'>142</span>
+<span class='line-number'>143</span>
+<span class='line-number'>144</span>
+<span class='line-number'>145</span>
+<span class='line-number'>146</span>
+<span class='line-number'>147</span>
+<span class='line-number'>148</span>
+<span class='line-number'>149</span>
+<span class='line-number'>150</span>
+<span class='line-number'>151</span>
+<span class='line-number'>152</span>
+<span class='line-number'>153</span>
+<span class='line-number'>154</span>
+<span class='line-number'>155</span>
+<span class='line-number'>156</span>
+</pre></td><td class='code'><pre><code class='java'><span class='line'><span class="o">/&lt;</span><span class="n">em</span><span class="o">&gt;*</span> <span class="n">表示</span> <span class="n">搬箱子</span> <span class="n">之类谜题的抽象类</span><span class="o">&lt;/</span><span class="n">em</span><span class="o">&gt;/</span>
+</span><span class='line'><span class="kd">public</span> <span class="kd">interface</span> <span class="nc">Puzzle</span><span class="o">&amp;</span><span class="n">lt</span><span class="o">;</span><span class="n">P</span><span class="o">,</span> <span class="n">M</span><span class="o">&gt;</span> <span class="o">{</span>
+</span><span class='line'>    <span class="n">P</span> <span class="nf">initialPosition</span><span class="o">();&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">pre</span><span class="o">&gt;&lt;</span><span class="n">code</span><span class="o">&gt;</span><span class="kt">boolean</span> <span class="nf">isGoal</span><span class="o">(</span><span class="n">P</span> <span class="n">position</span><span class="o">);</span>
+</span><span class='line'>
+</span><span class='line'><span class="n">Set</span><span class="o">&amp;</span><span class="n">lt</span><span class="o">;</span><span class="n">M</span><span class="o">&amp;</span><span class="n">gt</span><span class="o">;</span> <span class="n">legalMoves</span><span class="o">(</span><span class="n">P</span> <span class="n">position</span><span class="o">);</span>
+</span><span class='line'>
+</span><span class='line'><span class="n">P</span> <span class="nf">move</span><span class="o">(</span><span class="n">P</span> <span class="n">position</span><span class="o">,</span> <span class="n">M</span> <span class="n">move</span><span class="o">);</span>
+</span><span class='line'><span class="o">&lt;/</span><span class="n">code</span><span class="o">&gt;&lt;/</span><span class="n">pre</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;}</span>
+</span><span class='line'><span class="o">&lt;</span><span class="n">code</span><span class="o">&gt;</span>
+</span><span class='line'><span class="n">下面的PuzzleNode代表通过一系列的移动到达的一个位置</span><span class="err">，</span><span class="n">其中保存了到达该位置的移动以及前一个Node</span><span class="err">。</span><span class="n">只要沿着PuzzleNode链接逐步回溯</span><span class="err">，</span><span class="n">就可以重新构建出达到当前位置的移动序列</span><span class="err">。</span><span class="o">&amp;</span><span class="n">lt</span><span class="o">;!--</span><span class="n">more</span><span class="o">--&amp;</span><span class="n">gt</span><span class="o">;</span>
+</span><span class='line'><span class="o">&lt;/</span><span class="n">code</span><span class="o">&gt;</span> <span class="n">java</span>
+</span><span class='line'><span class="o">/&lt;</span><span class="n">em</span><span class="o">&gt;*</span> <span class="n">用于谜题解决框架的链接节点</span> <span class="o">&lt;/</span><span class="n">em</span><span class="o">&gt;/</span>
+</span><span class='line'><span class="nd">@Immutable</span>
+</span><span class='line'><span class="kd">public</span> <span class="kd">class</span> <span class="nc">PuzzleNode</span><span class="o">&amp;</span><span class="n">lt</span><span class="o">;</span><span class="n">P</span><span class="o">,</span> <span class="n">M</span><span class="o">&gt;</span> <span class="o">{</span>
+</span><span class='line'>    <span class="kd">final</span> <span class="n">P</span> <span class="n">pos</span><span class="o">;</span>
+</span><span class='line'>    <span class="kd">final</span> <span class="n">M</span> <span class="n">move</span><span class="o">;</span>
+</span><span class='line'>    <span class="kd">final</span> <span class="n">PuzzleNode</span><span class="o">&amp;</span><span class="n">lt</span><span class="o">;</span><span class="n">P</span><span class="o">,</span> <span class="n">M</span><span class="o">&gt;</span> <span class="n">prev</span><span class="o">;&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">pre</span><span class="o">&gt;&lt;</span><span class="n">code</span><span class="o">&gt;</span><span class="kd">public</span> <span class="nf">PuzzleNode</span><span class="o">(</span><span class="n">P</span> <span class="n">pos</span><span class="o">,</span> <span class="n">M</span> <span class="n">move</span><span class="o">,</span> <span class="n">PuzzleNode</span><span class="o">&amp;</span><span class="n">lt</span><span class="o">;</span><span class="n">P</span><span class="o">,</span> <span class="n">M</span><span class="o">&amp;</span><span class="n">gt</span><span class="o">;</span> <span class="n">prev</span><span class="o">)</span> <span class="o">{</span>
+</span><span class='line'>    <span class="k">this</span><span class="o">.</span><span class="na">pos</span> <span class="o">=</span> <span class="n">pos</span><span class="o">;</span>
+</span><span class='line'>    <span class="k">this</span><span class="o">.</span><span class="na">move</span> <span class="o">=</span> <span class="n">move</span><span class="o">;</span>
+</span><span class='line'>    <span class="k">this</span><span class="o">.</span><span class="na">prev</span> <span class="o">=</span> <span class="n">prev</span><span class="o">;</span>
+</span><span class='line'><span class="o">}</span>
+</span><span class='line'>
+</span><span class='line'><span class="n">List</span><span class="o">&amp;</span><span class="n">lt</span><span class="o">;</span><span class="n">M</span><span class="o">&amp;</span><span class="n">gt</span><span class="o">;</span> <span class="n">asMoveList</span><span class="o">()</span> <span class="o">{</span>
+</span><span class='line'>    <span class="n">List</span><span class="o">&amp;</span><span class="n">lt</span><span class="o">;</span><span class="n">M</span><span class="o">&amp;</span><span class="n">gt</span><span class="o">;</span> <span class="n">solution</span> <span class="o">=</span> <span class="k">new</span> <span class="n">LinkedList</span><span class="o">&amp;</span><span class="n">lt</span><span class="o">;</span><span class="n">M</span><span class="o">&amp;</span><span class="n">gt</span><span class="o">;();</span>
+</span><span class='line'>    <span class="k">for</span> <span class="o">(</span><span class="n">PuzzleNode</span><span class="o">&amp;</span><span class="n">lt</span><span class="o">;</span><span class="n">P</span><span class="o">,</span> <span class="n">M</span><span class="o">&amp;</span><span class="n">gt</span><span class="o">;</span> <span class="n">n</span> <span class="o">=</span> <span class="k">this</span><span class="o">;</span> <span class="n">n</span><span class="o">.</span><span class="na">move</span> <span class="o">!=</span> <span class="kc">null</span><span class="o">;</span> <span class="n">n</span> <span class="o">=</span> <span class="n">n</span><span class="o">.</span><span class="na">prev</span><span class="o">)</span>
+</span><span class='line'>        <span class="n">solution</span><span class="o">.</span><span class="na">add</span><span class="o">(</span><span class="mi">0</span><span class="o">,</span> <span class="n">n</span><span class="o">.</span><span class="na">move</span><span class="o">);</span>
+</span><span class='line'>    <span class="k">return</span> <span class="n">solution</span><span class="o">;</span>
+</span><span class='line'><span class="o">}</span>
+</span><span class='line'><span class="o">&lt;/</span><span class="n">code</span><span class="o">&gt;&lt;/</span><span class="n">pre</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;}</span>
+</span><span class='line'><span class="o">&lt;</span><span class="n">code</span><span class="o">&gt;</span>
+</span><span class='line'><span class="n">下面的SequentialPuzzleSolver给出了谜题框架的串行解决方案</span><span class="err">，</span><span class="n">它在谜题空间中执行深度优先搜索</span><span class="err">，</span><span class="n">当找到解答方案</span><span class="err">，</span><span class="n">不一定是最短的解决方案</span><span class="err">，</span><span class="n">结束搜索</span><span class="err">。</span>
+</span><span class='line'><span class="o">&lt;/</span><span class="n">code</span><span class="o">&gt;</span> <span class="n">java</span>
+</span><span class='line'><span class="o">/&lt;</span><span class="n">em</span><span class="o">&gt;*</span> <span class="n">串行的谜题解答器</span><span class="o">&lt;/</span><span class="n">em</span><span class="o">&gt;/</span>
+</span><span class='line'><span class="kd">public</span> <span class="kd">class</span> <span class="nc">SequentialPuzzleSolver</span><span class="o">&amp;</span><span class="n">lt</span><span class="o">;</span><span class="n">P</span><span class="o">,</span> <span class="n">M</span><span class="o">&gt;</span> <span class="o">{</span>
+</span><span class='line'>    <span class="kd">private</span> <span class="kd">final</span> <span class="n">Puzzle</span><span class="o">&amp;</span><span class="n">lt</span><span class="o">;</span><span class="n">P</span><span class="o">,</span> <span class="n">M</span><span class="o">&gt;</span> <span class="n">puzzle</span><span class="o">;</span>
+</span><span class='line'>    <span class="kd">private</span> <span class="kd">final</span> <span class="n">Set</span><span class="o">&lt;</span><span class="n">P</span><span class="o">&gt;</span> <span class="n">seen</span> <span class="o">=</span> <span class="k">new</span> <span class="n">HashSet</span><span class="o">&lt;</span><span class="n">P</span><span class="o">&gt;();&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">pre</span><span class="o">&gt;&lt;</span><span class="n">code</span><span class="o">&gt;</span><span class="kd">public</span> <span class="nf">SequentialPuzzleSolver</span><span class="o">(</span><span class="n">Puzzle</span><span class="o">&amp;</span><span class="n">lt</span><span class="o">;</span><span class="n">P</span><span class="o">,</span> <span class="n">M</span><span class="o">&amp;</span><span class="n">gt</span><span class="o">;</span> <span class="n">puzzle</span><span class="o">)</span> <span class="o">{</span>
+</span><span class='line'>    <span class="k">this</span><span class="o">.</span><span class="na">puzzle</span> <span class="o">=</span> <span class="n">puzzle</span><span class="o">;</span>
+</span><span class='line'><span class="o">}</span>
+</span><span class='line'>
+</span><span class='line'><span class="kd">public</span> <span class="n">List</span><span class="o">&amp;</span><span class="n">lt</span><span class="o">;</span><span class="n">M</span><span class="o">&amp;</span><span class="n">gt</span><span class="o">;</span> <span class="n">solve</span><span class="o">()</span> <span class="o">{</span>
+</span><span class='line'>    <span class="n">P</span> <span class="n">pos</span> <span class="o">=</span> <span class="n">puzzle</span><span class="o">.</span><span class="na">initialPosition</span><span class="o">();</span>
+</span><span class='line'>    <span class="k">return</span> <span class="nf">search</span><span class="o">(</span><span class="k">new</span> <span class="n">PuzzleNode</span><span class="o">&amp;</span><span class="n">lt</span><span class="o">;</span><span class="n">P</span><span class="o">,</span> <span class="n">M</span><span class="o">&amp;</span><span class="n">gt</span><span class="o">;(</span><span class="n">pos</span><span class="o">,</span> <span class="kc">null</span><span class="o">,</span> <span class="kc">null</span><span class="o">));</span>
+</span><span class='line'><span class="o">}</span>
+</span><span class='line'>
+</span><span class='line'><span class="kd">private</span> <span class="n">List</span><span class="o">&amp;</span><span class="n">lt</span><span class="o">;</span><span class="n">M</span><span class="o">&amp;</span><span class="n">gt</span><span class="o">;</span> <span class="n">search</span><span class="o">(</span><span class="n">PuzzleNode</span><span class="o">&amp;</span><span class="n">lt</span><span class="o">;</span><span class="n">P</span><span class="o">,</span> <span class="n">M</span><span class="o">&amp;</span><span class="n">gt</span><span class="o">;</span> <span class="n">node</span><span class="o">)</span> <span class="o">{</span>
+</span><span class='line'>    <span class="k">if</span> <span class="o">(!</span><span class="n">seen</span><span class="o">.</span><span class="na">contains</span><span class="o">(</span><span class="n">node</span><span class="o">.</span><span class="na">pos</span><span class="o">))</span> <span class="o">{</span>
+</span><span class='line'>        <span class="n">seen</span><span class="o">.</span><span class="na">add</span><span class="o">(</span><span class="n">node</span><span class="o">.</span><span class="na">pos</span><span class="o">);</span>
+</span><span class='line'>        <span class="k">if</span> <span class="o">(</span><span class="n">puzzle</span><span class="o">.</span><span class="na">isGoal</span><span class="o">(</span><span class="n">node</span><span class="o">.</span><span class="na">pos</span><span class="o">))</span>
+</span><span class='line'>            <span class="k">return</span> <span class="n">node</span><span class="o">.</span><span class="na">asMoveList</span><span class="o">();</span>
+</span><span class='line'>        <span class="k">for</span> <span class="o">(</span><span class="n">M</span> <span class="n">move</span> <span class="o">:</span> <span class="n">puzzle</span><span class="o">.</span><span class="na">legalMoves</span><span class="o">(</span><span class="n">node</span><span class="o">.</span><span class="na">pos</span><span class="o">))</span> <span class="o">{</span>
+</span><span class='line'>            <span class="n">P</span> <span class="n">pos</span> <span class="o">=</span> <span class="n">puzzle</span><span class="o">.</span><span class="na">move</span><span class="o">(</span><span class="n">node</span><span class="o">.</span><span class="na">pos</span><span class="o">,</span> <span class="n">move</span><span class="o">);</span>
+</span><span class='line'>            <span class="n">PuzzleNode</span><span class="o">&amp;</span><span class="n">lt</span><span class="o">;</span><span class="n">P</span><span class="o">,</span> <span class="n">M</span><span class="o">&amp;</span><span class="n">gt</span><span class="o">;</span> <span class="n">child</span> <span class="o">=</span> <span class="k">new</span> <span class="n">PuzzleNode</span><span class="o">&amp;</span><span class="n">lt</span><span class="o">;</span><span class="n">P</span><span class="o">,</span> <span class="n">M</span><span class="o">&amp;</span><span class="n">gt</span><span class="o">;(</span><span class="n">pos</span><span class="o">,</span> <span class="n">move</span><span class="o">,</span> <span class="n">node</span><span class="o">);</span>
+</span><span class='line'>            <span class="n">List</span><span class="o">&amp;</span><span class="n">lt</span><span class="o">;</span><span class="n">M</span><span class="o">&amp;</span><span class="n">gt</span><span class="o">;</span> <span class="n">result</span> <span class="o">=</span> <span class="n">search</span><span class="o">(</span><span class="n">child</span><span class="o">);</span>
+</span><span class='line'>            <span class="k">if</span> <span class="o">(</span><span class="n">result</span> <span class="o">!=</span> <span class="kc">null</span><span class="o">)</span>
+</span><span class='line'>                <span class="k">return</span> <span class="n">result</span><span class="o">;</span>
+</span><span class='line'>        <span class="o">}</span>
+</span><span class='line'>    <span class="o">}</span>
+</span><span class='line'>    <span class="k">return</span> <span class="kc">null</span><span class="o">;</span>
+</span><span class='line'><span class="o">}</span>
+</span><span class='line'><span class="o">&lt;/</span><span class="n">code</span><span class="o">&gt;&lt;/</span><span class="n">pre</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;}</span>
+</span><span class='line'><span class="o">&lt;</span><span class="n">code</span><span class="o">&gt;</span>
+</span><span class='line'><span class="n">接下来我们给出并行解决方案</span><span class="err">，</span><span class="n">ConcurrentPuzzleSolver中使用了一个内部类SolverTask</span><span class="err">，</span><span class="n">这个类扩展了PuzzleNode并实现了Runnable</span><span class="err">。</span><span class="n">大多数工作都是在run中完成的</span><span class="err">：</span><span class="n">首先计算下一步肯能到达的所有位置</span><span class="err">，</span><span class="n">并去掉已经到达的位置</span><span class="err">，</span><span class="n">然后判断</span><span class="err">（</span><span class="n">这个任务或者其他某个任务</span><span class="err">）</span><span class="n">是否已经成功完成</span><span class="err">，</span><span class="n">最后将尚未搜索过的位置提交给Executor</span><span class="err">。</span>
+</span><span class='line'><span class="o">&lt;/</span><span class="n">code</span><span class="o">&gt;</span> <span class="n">java</span>
+</span><span class='line'><span class="kd">public</span> <span class="kd">class</span> <span class="nc">ConcurrentPuzzleSolver</span><span class="o">&amp;</span><span class="n">lt</span><span class="o">;</span><span class="n">P</span><span class="o">,</span> <span class="n">M</span><span class="o">&gt;</span> <span class="o">{</span>
+</span><span class='line'>    <span class="kd">private</span> <span class="kd">final</span> <span class="n">Puzzle</span><span class="o">&amp;</span><span class="n">lt</span><span class="o">;</span><span class="n">P</span><span class="o">,</span> <span class="n">M</span><span class="o">&gt;</span> <span class="n">puzzle</span><span class="o">;</span>
+</span><span class='line'>    <span class="kd">private</span> <span class="kd">final</span> <span class="n">ExecutorService</span> <span class="n">exec</span><span class="o">;</span>
+</span><span class='line'>    <span class="kd">private</span> <span class="kd">final</span> <span class="n">ConcurrentMap</span><span class="o">&amp;</span><span class="n">lt</span><span class="o">;</span><span class="n">P</span><span class="o">,</span> <span class="n">Boolean</span><span class="o">&gt;</span> <span class="n">seen</span><span class="o">;</span>
+</span><span class='line'>    <span class="kd">protected</span> <span class="kd">final</span> <span class="n">ValueLatch</span><span class="o">&amp;</span><span class="n">lt</span><span class="o">;</span><span class="n">PuzzleNode</span><span class="o">&amp;</span><span class="n">lt</span><span class="o">;</span><span class="n">P</span><span class="o">,</span> <span class="n">M</span><span class="o">&gt;&gt;</span> <span class="n">solution</span> <span class="o">=</span> <span class="k">new</span> <span class="n">ValueLatch</span><span class="o">&amp;</span><span class="n">lt</span><span class="o">;</span><span class="n">PuzzleNode</span><span class="o">&amp;</span><span class="n">lt</span><span class="o">;</span><span class="n">P</span><span class="o">,</span> <span class="n">M</span><span class="o">&gt;&gt;();&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">pre</span><span class="o">&gt;&lt;</span><span class="n">code</span><span class="o">&gt;</span><span class="kd">public</span> <span class="nf">ConcurrentPuzzleSolver</span><span class="o">(</span><span class="n">Puzzle</span><span class="o">&amp;</span><span class="n">lt</span><span class="o">;</span><span class="n">P</span><span class="o">,</span> <span class="n">M</span><span class="o">&amp;</span><span class="n">gt</span><span class="o">;</span> <span class="n">puzzle</span><span class="o">)</span> <span class="o">{</span>
+</span><span class='line'>    <span class="k">this</span><span class="o">.</span><span class="na">puzzle</span> <span class="o">=</span> <span class="n">puzzle</span><span class="o">;</span>
+</span><span class='line'>    <span class="k">this</span><span class="o">.</span><span class="na">exec</span> <span class="o">=</span> <span class="n">initThreadPool</span><span class="o">();</span>
+</span><span class='line'>    <span class="k">this</span><span class="o">.</span><span class="na">seen</span> <span class="o">=</span> <span class="k">new</span> <span class="n">ConcurrentHashMap</span><span class="o">&amp;</span><span class="n">lt</span><span class="o">;</span><span class="n">P</span><span class="o">,</span> <span class="n">Boolean</span><span class="o">&amp;</span><span class="n">gt</span><span class="o">;();</span>
+</span><span class='line'>    <span class="k">if</span> <span class="o">(</span><span class="n">exec</span> <span class="k">instanceof</span> <span class="n">ThreadPoolExecutor</span><span class="o">)</span> <span class="o">{</span>
+</span><span class='line'>        <span class="n">ThreadPoolExecutor</span> <span class="n">tpe</span> <span class="o">=</span> <span class="o">(</span><span class="n">ThreadPoolExecutor</span><span class="o">)</span> <span class="n">exec</span><span class="o">;</span>
+</span><span class='line'>        <span class="n">tpe</span><span class="o">.</span><span class="na">setRejectedExecutionHandler</span><span class="o">(</span><span class="k">new</span> <span class="n">ThreadPoolExecutor</span><span class="o">.</span><span class="na">DiscardPolicy</span><span class="o">());</span>
+</span><span class='line'>    <span class="o">}</span>
+</span><span class='line'><span class="o">}</span>
+</span><span class='line'>
+</span><span class='line'><span class="kd">private</span> <span class="n">ExecutorService</span> <span class="nf">initThreadPool</span><span class="o">()</span> <span class="o">{</span>
+</span><span class='line'>    <span class="k">return</span> <span class="n">Executors</span><span class="o">.</span><span class="na">newCachedThreadPool</span><span class="o">();</span>
+</span><span class='line'><span class="o">}</span>
+</span><span class='line'>
+</span><span class='line'><span class="kd">public</span> <span class="n">List</span><span class="o">&amp;</span><span class="n">lt</span><span class="o">;</span><span class="n">M</span><span class="o">&amp;</span><span class="n">gt</span><span class="o">;</span> <span class="n">solve</span><span class="o">()</span> <span class="kd">throws</span> <span class="n">InterruptedException</span> <span class="o">{</span>
+</span><span class='line'>    <span class="k">try</span> <span class="o">{</span>
+</span><span class='line'>        <span class="n">P</span> <span class="n">p</span> <span class="o">=</span> <span class="n">puzzle</span><span class="o">.</span><span class="na">initialPosition</span><span class="o">();</span>
+</span><span class='line'>        <span class="n">exec</span><span class="o">.</span><span class="na">execute</span><span class="o">(</span><span class="n">newTask</span><span class="o">(</span><span class="n">p</span><span class="o">,</span> <span class="kc">null</span><span class="o">,</span> <span class="kc">null</span><span class="o">));</span>
+</span><span class='line'>        <span class="c1">// block until solution found</span>
+</span><span class='line'>        <span class="n">PuzzleNode</span><span class="o">&amp;</span><span class="n">lt</span><span class="o">;</span><span class="n">P</span><span class="o">,</span> <span class="n">M</span><span class="o">&amp;</span><span class="n">gt</span><span class="o">;</span> <span class="n">solnPuzzleNode</span> <span class="o">=</span> <span class="n">solution</span><span class="o">.</span><span class="na">getValue</span><span class="o">();</span>
+</span><span class='line'>        <span class="k">return</span> <span class="o">(</span><span class="n">solnPuzzleNode</span> <span class="o">==</span> <span class="kc">null</span><span class="o">)</span> <span class="o">?</span> <span class="kc">null</span> <span class="o">:</span> <span class="n">solnPuzzleNode</span><span class="o">.</span><span class="na">asMoveList</span><span class="o">();</span>
+</span><span class='line'>    <span class="o">}</span> <span class="k">finally</span> <span class="o">{</span>
+</span><span class='line'>        <span class="n">exec</span><span class="o">.</span><span class="na">shutdown</span><span class="o">();</span>
+</span><span class='line'>    <span class="o">}</span>
+</span><span class='line'><span class="o">}</span>
+</span><span class='line'>
+</span><span class='line'><span class="kd">protected</span> <span class="n">Runnable</span> <span class="nf">newTask</span><span class="o">(</span><span class="n">P</span> <span class="n">p</span><span class="o">,</span> <span class="n">M</span> <span class="n">m</span><span class="o">,</span> <span class="n">PuzzleNode</span><span class="o">&amp;</span><span class="n">lt</span><span class="o">;</span><span class="n">P</span><span class="o">,</span> <span class="n">M</span><span class="o">&amp;</span><span class="n">gt</span><span class="o">;</span> <span class="n">n</span><span class="o">)</span> <span class="o">{</span>
+</span><span class='line'>    <span class="k">return</span> <span class="k">new</span> <span class="nf">SolverTask</span><span class="o">(</span><span class="n">p</span><span class="o">,</span> <span class="n">m</span><span class="o">,</span> <span class="n">n</span><span class="o">);</span>
+</span><span class='line'><span class="o">}</span>
+</span><span class='line'>
+</span><span class='line'><span class="kd">protected</span> <span class="kd">class</span> <span class="nc">SolverTask</span> <span class="kd">extends</span> <span class="n">PuzzleNode</span><span class="o">&amp;</span><span class="n">lt</span><span class="o">;</span><span class="n">P</span><span class="o">,</span> <span class="n">M</span><span class="o">&amp;</span><span class="n">gt</span><span class="o">;</span> <span class="kd">implements</span> <span class="n">Runnable</span> <span class="o">{</span>
+</span><span class='line'>    <span class="n">SolverTask</span><span class="o">(</span><span class="n">P</span> <span class="n">pos</span><span class="o">,</span> <span class="n">M</span> <span class="n">move</span><span class="o">,</span> <span class="n">PuzzleNode</span><span class="o">&amp;</span><span class="n">lt</span><span class="o">;</span><span class="n">P</span><span class="o">,</span> <span class="n">M</span><span class="o">&amp;</span><span class="n">gt</span><span class="o">;</span> <span class="n">prev</span><span class="o">)</span> <span class="o">{</span>
+</span><span class='line'>        <span class="kd">super</span><span class="o">(</span><span class="n">pos</span><span class="o">,</span> <span class="n">move</span><span class="o">,</span> <span class="n">prev</span><span class="o">);</span>
+</span><span class='line'>    <span class="o">}</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="kd">public</span> <span class="kt">void</span> <span class="nf">run</span><span class="o">()</span> <span class="o">{</span>
+</span><span class='line'>        <span class="k">if</span> <span class="o">(</span><span class="n">solution</span><span class="o">.</span><span class="na">isSet</span><span class="o">()</span> <span class="o">||</span> <span class="n">seen</span><span class="o">.</span><span class="na">putIfAbsent</span><span class="o">(</span><span class="n">pos</span><span class="o">,</span> <span class="kc">true</span><span class="o">)</span> <span class="o">!=</span> <span class="kc">null</span><span class="o">)</span>
+</span><span class='line'>            <span class="k">return</span><span class="o">;</span> <span class="c1">// already solved or seen this position</span>
+</span><span class='line'>        <span class="k">if</span> <span class="o">(</span><span class="n">puzzle</span><span class="o">.</span><span class="na">isGoal</span><span class="o">(</span><span class="n">pos</span><span class="o">))</span>
+</span><span class='line'>            <span class="n">solution</span><span class="o">.</span><span class="na">setValue</span><span class="o">(</span><span class="k">this</span><span class="o">);</span>
+</span><span class='line'>        <span class="k">else</span>
+</span><span class='line'>            <span class="nf">for</span> <span class="o">(</span><span class="n">M</span> <span class="n">m</span> <span class="o">:</span> <span class="n">puzzle</span><span class="o">.</span><span class="na">legalMoves</span><span class="o">(</span><span class="n">pos</span><span class="o">))</span>
+</span><span class='line'>                <span class="n">exec</span><span class="o">.</span><span class="na">execute</span><span class="o">(</span><span class="n">newTask</span><span class="o">(</span><span class="n">puzzle</span><span class="o">.</span><span class="na">move</span><span class="o">(</span><span class="n">pos</span><span class="o">,</span> <span class="n">m</span><span class="o">),</span> <span class="n">m</span><span class="o">,</span> <span class="k">this</span><span class="o">));</span>
+</span><span class='line'>    <span class="o">}</span>
+</span><span class='line'><span class="o">}</span>
+</span><span class='line'><span class="o">&lt;/</span><span class="n">code</span><span class="o">&gt;&lt;/</span><span class="n">pre</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;}&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="nd">@ThreadSafe</span>
+</span><span class='line'><span class="kd">public</span> <span class="kd">class</span> <span class="nc">ValueLatch</span><span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;</span> <span class="o">{</span>
+</span><span class='line'>    <span class="nd">@GuardedBy</span><span class="o">(&amp;</span><span class="n">ldquo</span><span class="o">;</span><span class="k">this</span><span class="o">&amp;</span><span class="n">rdquo</span><span class="o">;)</span>
+</span><span class='line'>    <span class="kd">private</span> <span class="n">T</span> <span class="n">value</span> <span class="o">=</span> <span class="kc">null</span><span class="o">;</span>
+</span><span class='line'>    <span class="kd">private</span> <span class="kd">final</span> <span class="n">CountDownLatch</span> <span class="n">done</span> <span class="o">=</span> <span class="k">new</span> <span class="nf">CountDownLatch</span><span class="o">(</span><span class="mi">1</span><span class="o">);&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">pre</span><span class="o">&gt;&lt;</span><span class="n">code</span><span class="o">&gt;</span><span class="kd">public</span> <span class="kt">boolean</span> <span class="nf">isSet</span><span class="o">()</span> <span class="o">{</span>
+</span><span class='line'>    <span class="k">return</span> <span class="o">(</span><span class="n">done</span><span class="o">.</span><span class="na">getCount</span><span class="o">()</span> <span class="o">==</span> <span class="mi">0</span><span class="o">);</span>
+</span><span class='line'><span class="o">}</span>
+</span><span class='line'>
+</span><span class='line'><span class="kd">public</span> <span class="kd">synchronized</span> <span class="kt">void</span> <span class="nf">setValue</span><span class="o">(</span><span class="n">T</span> <span class="n">newValue</span><span class="o">)</span> <span class="o">{</span>
+</span><span class='line'>    <span class="k">if</span> <span class="o">(!</span><span class="n">isSet</span><span class="o">())</span> <span class="o">{</span>
+</span><span class='line'>        <span class="n">value</span> <span class="o">=</span> <span class="n">newValue</span><span class="o">;</span>
+</span><span class='line'>        <span class="n">done</span><span class="o">.</span><span class="na">countDown</span><span class="o">();</span>
+</span><span class='line'>    <span class="o">}</span>
+</span><span class='line'><span class="o">}</span>
+</span><span class='line'>
+</span><span class='line'><span class="kd">public</span> <span class="n">T</span> <span class="nf">getValue</span><span class="o">()</span> <span class="kd">throws</span> <span class="n">InterruptedException</span> <span class="o">{</span>
+</span><span class='line'>    <span class="n">done</span><span class="o">.</span><span class="na">await</span><span class="o">();</span>
+</span><span class='line'>    <span class="kd">synchronized</span> <span class="o">(</span><span class="k">this</span><span class="o">)</span> <span class="o">{</span>
+</span><span class='line'>        <span class="k">return</span> <span class="n">value</span><span class="o">;</span>
+</span><span class='line'>    <span class="o">}</span>
+</span><span class='line'><span class="o">}</span>
+</span><span class='line'><span class="o">&lt;/</span><span class="n">code</span><span class="o">&gt;&lt;/</span><span class="n">pre</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;}</span>
+</span></code></pre></td></tr></table></div></figure>
+比较串行和并行算法可知：并发方法引入了一种新形式的限制并去掉了一种原有的限制，新的限制在这个问题域中更合适。串行版本的程序执行深度优先搜索，因此搜索过程将受限于栈的大小。并发版本程序执行广度优先搜索，因此不会受到栈大小的限制。</p>
+
+<p>第一个找到解答的线程还会关闭Executor，从而阻止接受显得任务。要避免处理RejectedExecutionException（等待队列满员或者是Executor关闭后提交的任务），需要将拒绝执行处理器设置为DiscardPolicy 。</p>
+
+<p>如果不存在解答，那么ConcurrentPuzzleSolver就会永远的等待下去，getSolution一直阻塞下去。
+通过记录活动任务数量，当该值为零时将解答设置为null，如下：</p>
+
+<pre><code class="java">public class PuzzleSolver&lt;P, M&gt; extends ConcurrentPuzzleSolver&lt;P, M&gt; {
+    PuzzleSolver(Puzzle&lt;P, M&gt; puzzle) {
+        super(puzzle);
+    }
+
+    private final AtomicInteger taskCount = new AtomicInteger(0);
+
+    protected Runnable newTask(P p, M m, PuzzleNode&lt;P, M&gt; n) {
+        return new CountingSolverTask(p, m, n);
+    }
+
+    class CountingSolverTask extends SolverTask {
+        CountingSolverTask(P pos, M move, PuzzleNode&lt;P, M&gt; prev) {
+            super(pos, move, prev);
+            taskCount.incrementAndGet();
+        }
+
+        public void run() {
+            try {
+                super.run();
+            } finally {
+                if (taskCount.decrementAndGet() == 0)
+                    solution.setValue(null);
+            }
+        }
+    }
+}
+</code></pre>
+
+<p>另外，还可以将ValueLatch设置为限时的，将getValue使用await的限时版实现，那么就可以指定多少时间内搜索结果，搜不到就超时中断。</p>
+]]></content>
+  </entry>
+  
+</feed>

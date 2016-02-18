@@ -1,4 +1,4 @@
 User-agent: *
 Disallow: 
 
-Sitemap: http://normangyllenhaal.github.io/sitemap.xml 
+Sitemap: http://yeangpeng.tech/sitemap.xml 

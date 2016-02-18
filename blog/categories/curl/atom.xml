@@ -2,10 +2,10 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
 
   <title><![CDATA[Category: curl | Hi, I’m Yang Peng]]></title>
-  <link href="http://normangyllenhaal.github.io/blog/categories/curl/atom.xml" rel="self"/>
-  <link href="http://normangyllenhaal.github.io/"/>
-  <updated>2016-02-18T11:32:40+08:00</updated>
-  <id>http://normangyllenhaal.github.io/</id>
+  <link href="http://yeangpeng.tech/blog/categories/curl/atom.xml" rel="self"/>
+  <link href="http://yeangpeng.tech/"/>
+  <updated>2016-02-18T15:37:18+08:00</updated>
+  <id>http://yeangpeng.tech/</id>
   <author>
     <name><![CDATA[Yang Peng]]></name>
     <email><![CDATA[me@yangpeng.tech]]></email>
@@ -15,9 +15,9 @@
   
   <entry>
     <title type="html"><![CDATA[Checking for updates using git tags]]></title>
-    <link href="http://normangyllenhaal.github.io/blog/2013/07/08/checking-for-updates-using-git-tags/"/>
+    <link href="http://yeangpeng.tech/blog/2013/07/08/checking-for-updates-using-git-tags/"/>
     <updated>2013-07-08T19:39:00+08:00</updated>
-    <id>http://normangyllenhaal.github.io/blog/2013/07/08/checking-for-updates-using-git-tags</id>
+    <id>http://yeangpeng.tech/blog/2013/07/08/checking-for-updates-using-git-tags</id>
     <content type="html"><![CDATA[<p>At some point during the development of version 2.0 of my software package <a href="http://github.com/tschoonj/xmimsim">XMI-MSIM</a>, I decided to implement a routine that would allow for the program to check if newer versions (updates) were available. This would be extremely useful for the users of the Windows and Mac OS X builds of my package, since these operating systems do not come with package-management tools as most Linux distributions do (I am staying far away from Mac App Store and Windows store as I am not willing to pay their developer fees).</p>
 
 <p>Initially I was looking at <a href="http://sparkle.andymatuschak.org">Sparkle</a>, a fantastic tool for OS X apps.

@@ -1,0 +1,268 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+
+  <title><![CDATA[Category: fastjson | Hi, I’m Yang Peng]]></title>
+  <link href="http://yeangpeng.tech/blog/categories/fastjson/atom.xml" rel="self"/>
+  <link href="http://yeangpeng.tech/"/>
+  <updated>2016-02-18T15:37:18+08:00</updated>
+  <id>http://yeangpeng.tech/</id>
+  <author>
+    <name><![CDATA[Yang Peng]]></name>
+    <email><![CDATA[me@yangpeng.tech]]></email>
+  </author>
+  <generator uri="http://octopress.org/">Octopress</generator>
+
+  
+  <entry>
+    <title type="html"><![CDATA[fastjson对Date的处理]]></title>
+    <link href="http://yeangpeng.tech/blog/2015/04/22/fastjson-date/"/>
+    <updated>2015-04-22T13:45:15+08:00</updated>
+    <id>http://yeangpeng.tech/blog/2015/04/22/fastjson-date</id>
+    <content type="html"><![CDATA[<p><strong>fastjson对日期的序列化方式：</strong></p>
+
+<p>一种方法是通过注解
+<code>java
+@JSONField (format="yyyy-MM-dd HH:mm:ss")
+public Date birthday;
+</code></p>
+
+<p>另一种是通过SerializeConfig：
+<code>java
+private static SerializeConfig mapping = new SerializeConfig();
+private static String dateFormat;
+static {
+    dateFormat = "yyyy-MM-dd HH:mm:ss";
+    mapping.put(Date.class, new SimpleDateFormatSerializer(dateFormat));
+}
+</code></p>
+
+<p>json字符串中使用单引号：
+<code>java
+String text = JSON.toJSONString(object, SerializerFeature.UseSingleQuotes);
+</code></p>
+
+<!--more-->
+
+
+<p>字段显示不同的key：
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+</pre></td><td class='code'><pre><code class='java'><span class='line'><span class="kd">public</span> <span class="kd">class</span> <span class="nc">User</span> <span class="o">{</span>
+</span><span class='line'>    <span class="nd">@JSONField</span><span class="o">(</span><span class="n">name</span><span class="o">=&amp;</span><span class="n">ldquo</span><span class="o">;</span><span class="n">ID</span><span class="o">&amp;</span><span class="n">rdquo</span><span class="o">;)</span>
+</span><span class='line'>    <span class="kd">public</span> <span class="kt">int</span> <span class="nf">getId</span><span class="o">()</span> <span class="o">{</span> <span class="o">&amp;</span><span class="n">hellip</span><span class="o">;</span> <span class="o">}</span>
+</span><span class='line'><span class="o">}&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="n">User</span> <span class="n">user</span> <span class="o">=</span> <span class="o">&amp;</span><span class="n">hellip</span><span class="o">;;</span>
+</span><span class='line'><span class="n">JSON</span><span class="o">.</span><span class="na">toJSONString</span><span class="o">(</span><span class="n">user</span><span class="o">);</span> <span class="c1">// {&amp;ldquo;ID&amp;rdquo;:001}</span>
+</span></code></pre></td></tr></table></div></figure></p>
+
+<p>类的反序列化 JavaBean：
+<code>java
+String text = ...; // {"r":255,"g":0,"b":0,"alpha":255}
+Color color = JSON.parseObject(text, Color.class);
+</code></p>
+
+<p>数组：
+<code>java
+String text = ...; // [{ ... }, { ... }]
+List&lt;User&gt; users = JSON.parseArray(text, User.class);
+</code></p>
+
+<p>泛型：
+<code>java
+String text = ...; // {"name":{"name":"ljw",age:18}}
+Map&lt;String, User&gt; userMap = JSON.parseObject(text, new TypeReference&lt;Map&lt;String, User&gt;&gt;() {});
+</code></p>
+
+<p><strong>自定义序列化代码示例:</strong></p>
+
+<pre><code class="java">public class JsonUtil {
+    private static SerializeConfig mapping = new SerializeConfig();
+    private static String dateFormat;
+    static {
+        dateFormat = "yyyy-MM-dd HH:mm:ss";
+    }
+
+    /**
+     * 默认的处理时间
+     *
+     * @param jsonText
+     * @return
+     */
+    public static String toJSON(Object jsonText) {
+        return JSON.toJSONString(jsonText,
+                SerializerFeature.WriteDateUseDateFormat);
+    }
+
+    /**
+     * 自定义时间格式
+     *
+     * @param jsonText
+     * @return
+     */
+    public static String toJSON(String dateFormat, String jsonText) {
+        mapping.put(Date.class, new SimpleDateFormatSerializer(dateFormat));
+        return JSON.toJSONString(jsonText, mapping);
+    }
+}
+</code></pre>
+
+<p><strong>自定义日期格式反序列化示例</strong></p>
+
+<p>先自定义一个日期解析类：
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+<span class='line-number'>34</span>
+<span class='line-number'>35</span>
+<span class='line-number'>36</span>
+<span class='line-number'>37</span>
+<span class='line-number'>38</span>
+<span class='line-number'>39</span>
+<span class='line-number'>40</span>
+<span class='line-number'>41</span>
+<span class='line-number'>42</span>
+<span class='line-number'>43</span>
+<span class='line-number'>44</span>
+<span class='line-number'>45</span>
+<span class='line-number'>46</span>
+<span class='line-number'>47</span>
+<span class='line-number'>48</span>
+<span class='line-number'>49</span>
+<span class='line-number'>50</span>
+<span class='line-number'>51</span>
+<span class='line-number'>52</span>
+<span class='line-number'>53</span>
+<span class='line-number'>54</span>
+<span class='line-number'>55</span>
+<span class='line-number'>56</span>
+<span class='line-number'>57</span>
+<span class='line-number'>58</span>
+<span class='line-number'>59</span>
+<span class='line-number'>60</span>
+<span class='line-number'>61</span>
+<span class='line-number'>62</span>
+<span class='line-number'>63</span>
+<span class='line-number'>64</span>
+<span class='line-number'>65</span>
+<span class='line-number'>66</span>
+<span class='line-number'>67</span>
+<span class='line-number'>68</span>
+<span class='line-number'>69</span>
+<span class='line-number'>70</span>
+</pre></td><td class='code'><pre><code class='java'><span class='line'><span class="kd">public</span> <span class="kd">class</span> <span class="nc">MyDateFormatDeserializer</span> <span class="kd">extends</span> <span class="n">DateFormatDeserializer</span> <span class="o">{&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">pre</span><span class="o">&gt;&lt;</span><span class="n">code</span><span class="o">&gt;</span>    <span class="kd">private</span> <span class="n">String</span> <span class="n">myFormat</span><span class="o">;</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="kd">public</span> <span class="nf">MyDateFormatDeserializer</span><span class="o">(</span><span class="n">String</span> <span class="n">myFormat</span><span class="o">)</span> <span class="o">{</span>
+</span><span class='line'>        <span class="kd">super</span><span class="o">();</span>
+</span><span class='line'>        <span class="k">this</span><span class="o">.</span><span class="na">myFormat</span> <span class="o">=</span> <span class="n">myFormat</span><span class="o">;</span>
+</span><span class='line'>    <span class="o">}</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="nd">@Override</span>
+</span><span class='line'>    <span class="kd">protected</span> <span class="o">&amp;</span><span class="n">lt</span><span class="o">;</span><span class="n">Date</span><span class="o">&amp;</span><span class="n">gt</span><span class="o">;</span> <span class="n">Date</span> <span class="nf">cast</span><span class="o">(</span><span class="n">DefaultJSONParser</span> <span class="n">parser</span><span class="o">,</span> <span class="n">Type</span> <span class="n">clazz</span><span class="o">,</span> <span class="n">Object</span> <span class="n">fieldName</span><span class="o">,</span> <span class="n">Object</span> <span class="n">val</span><span class="o">)</span> <span class="o">{</span>
+</span><span class='line'>        <span class="k">if</span> <span class="o">(</span><span class="n">myFormat</span> <span class="o">==</span> <span class="kc">null</span><span class="o">)</span> <span class="o">{</span>
+</span><span class='line'>            <span class="k">return</span> <span class="kc">null</span><span class="o">;</span>
+</span><span class='line'>        <span class="o">}</span>
+</span><span class='line'>        <span class="k">if</span> <span class="o">(</span><span class="n">val</span> <span class="k">instanceof</span> <span class="n">String</span><span class="o">)</span> <span class="o">{</span>
+</span><span class='line'>            <span class="n">String</span> <span class="n">strVal</span> <span class="o">=</span> <span class="o">(</span><span class="n">String</span><span class="o">)</span> <span class="n">val</span><span class="o">;</span>
+</span><span class='line'>            <span class="k">if</span> <span class="o">(</span><span class="n">strVal</span><span class="o">.</span><span class="na">length</span><span class="o">()</span> <span class="o">==</span> <span class="mi">0</span><span class="o">)</span> <span class="o">{</span>
+</span><span class='line'>                <span class="k">return</span> <span class="kc">null</span><span class="o">;</span>
+</span><span class='line'>            <span class="o">}</span>
+</span><span class='line'>
+</span><span class='line'>            <span class="k">try</span> <span class="o">{</span>
+</span><span class='line'>                <span class="k">return</span> <span class="o">(</span><span class="n">Date</span><span class="o">)</span> <span class="k">new</span> <span class="nf">SimpleDateFormat</span><span class="o">(</span><span class="n">myFormat</span><span class="o">).</span><span class="na">parse</span><span class="o">((</span><span class="n">String</span><span class="o">)</span><span class="n">val</span><span class="o">);</span>
+</span><span class='line'>            <span class="o">}</span> <span class="k">catch</span> <span class="o">(</span><span class="n">ParseException</span> <span class="n">e</span><span class="o">)</span> <span class="o">{</span>
+</span><span class='line'>                <span class="k">throw</span> <span class="k">new</span> <span class="nf">JSONException</span><span class="o">(</span><span class="s">&quot;parse error&quot;</span><span class="o">);</span>
+</span><span class='line'>            <span class="o">}</span>
+</span><span class='line'>        <span class="o">}</span>
+</span><span class='line'>        <span class="k">throw</span> <span class="k">new</span> <span class="nf">JSONException</span><span class="o">(</span><span class="s">&quot;parse error&quot;</span><span class="o">);</span>
+</span><span class='line'>    <span class="o">}</span>
+</span><span class='line'><span class="o">}</span>
+</span><span class='line'><span class="o">&lt;/</span><span class="n">code</span><span class="o">&gt;&lt;/</span><span class="n">pre</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">pre</span><span class="o">&gt;&lt;</span><span class="n">code</span><span class="o">&gt;</span><span class="n">User类</span>
+</span><span class='line'><span class="o">&lt;/</span><span class="n">code</span><span class="o">&gt;&lt;/</span><span class="n">pre</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="kd">public</span> <span class="kd">class</span> <span class="nc">User</span> <span class="o">{&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">pre</span><span class="o">&gt;&lt;</span><span class="n">code</span><span class="o">&gt;</span><span class="kd">public</span> <span class="n">String</span> <span class="n">name</span><span class="o">;</span>
+</span><span class='line'><span class="kd">public</span> <span class="kt">int</span> <span class="n">height</span><span class="o">;</span>
+</span><span class='line'>
+</span><span class='line'><span class="nd">@JSONField</span><span class="o">(</span><span class="n">name</span> <span class="o">=</span> <span class="s">&quot;com-google-com&quot;</span><span class="o">)</span>
+</span><span class='line'><span class="kd">public</span> <span class="kt">void</span> <span class="nf">setName</span><span class="o">(</span><span class="n">String</span> <span class="n">name</span><span class="o">)</span> <span class="o">{</span>
+</span><span class='line'>    <span class="k">this</span><span class="o">.</span><span class="na">name</span> <span class="o">=</span> <span class="n">name</span><span class="o">;</span>
+</span><span class='line'><span class="o">}</span>
+</span><span class='line'>
+</span><span class='line'><span class="nd">@JSONField</span><span class="o">(</span><span class="n">format</span> <span class="o">=</span> <span class="s">&quot;yyyy-MM/dd HH:mm:ss&quot;</span><span class="o">)</span>
+</span><span class='line'><span class="kd">public</span> <span class="n">Date</span> <span class="n">birthday</span><span class="o">;</span>
+</span><span class='line'><span class="o">&lt;/</span><span class="n">code</span><span class="o">&gt;&lt;/</span><span class="n">pre</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;}</span>
+</span><span class='line'><span class="o">&lt;</span><span class="n">code</span><span class="o">&gt;</span>
+</span><span class='line'><span class="n">测试下</span><span class="err">：</span>
+</span><span class='line'><span class="o">&lt;/</span><span class="n">code</span><span class="o">&gt;</span> <span class="n">java</span>
+</span><span class='line'><span class="o">/&lt;</span><span class="n">em</span><span class="o">&gt;*</span>
+</span><span class='line'> <span class="o">*</span> <span class="nd">@param</span> <span class="n">args</span>
+</span><span class='line'> <span class="o">*</span> <span class="nd">@throws</span> <span class="n">IOException</span>
+</span><span class='line'> <span class="o">&lt;/</span><span class="n">em</span><span class="o">&gt;/</span>
+</span><span class='line'><span class="kd">public</span> <span class="kd">static</span> <span class="kt">void</span> <span class="nf">main</span><span class="o">(</span><span class="n">String</span><span class="o">[]</span> <span class="n">args</span><span class="o">)</span> <span class="kd">throws</span> <span class="n">IOException</span><span class="o">,</span> <span class="n">ParseException</span> <span class="o">{&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">pre</span><span class="o">&gt;&lt;</span><span class="n">code</span><span class="o">&gt;</span><span class="n">String</span> <span class="n">json</span> <span class="o">=</span> <span class="s">&quot;{\&quot;name\&quot;:\&quot;22323\&quot;, \&quot;age\&quot;: 1234,&quot;</span> <span class="o">+</span>
+</span><span class='line'>        <span class="s">&quot; \&quot;birthday\&quot;: \&quot;2012-12/12 12:12:12\&quot;}&quot;</span><span class="o">;</span>
+</span><span class='line'><span class="n">Test</span> <span class="n">t</span> <span class="o">=</span> <span class="n">JSON</span><span class="o">.</span><span class="na">parseObject</span><span class="o">(</span><span class="n">json</span><span class="o">,</span> <span class="n">Test</span><span class="o">.</span><span class="na">class</span><span class="o">,</span> <span class="n">mapping</span><span class="o">,</span>
+</span><span class='line'>        <span class="n">JSON</span><span class="o">.</span><span class="na">DEFAULT_PARSER_FEATURE</span><span class="o">,</span> <span class="k">new</span> <span class="n">Feature</span><span class="o">[</span><span class="mi">0</span><span class="o">]);</span>
+</span><span class='line'><span class="n">System</span><span class="o">.</span><span class="na">out</span><span class="o">.</span><span class="na">println</span><span class="o">(</span><span class="n">t</span><span class="o">.</span><span class="na">name</span><span class="o">);</span>
+</span><span class='line'><span class="n">System</span><span class="o">.</span><span class="na">out</span><span class="o">.</span><span class="na">println</span><span class="o">(</span><span class="n">t</span><span class="o">.</span><span class="na">height</span><span class="o">);</span>
+</span><span class='line'><span class="n">System</span><span class="o">.</span><span class="na">out</span><span class="o">.</span><span class="na">println</span><span class="o">(</span><span class="n">t</span><span class="o">.</span><span class="na">birthday</span><span class="o">);</span>
+</span><span class='line'><span class="n">System</span><span class="o">.</span><span class="na">out</span><span class="o">.</span><span class="na">println</span><span class="o">(</span>
+</span><span class='line'>        <span class="k">new</span> <span class="nf">SimpleDateFormat</span><span class="o">(</span><span class="s">&quot;yyyy-MM/dd HH:mm:ss&quot;</span><span class="o">).</span><span class="na">parse</span><span class="o">(</span><span class="s">&quot;2012-12/12 12:12:12&quot;</span><span class="o">));</span>
+</span><span class='line'><span class="o">&lt;/</span><span class="n">code</span><span class="o">&gt;&lt;/</span><span class="n">pre</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;}</span>
+</span></code></pre></td></tr></table></div></figure></p>
+
+<p><strong>总结：</strong></p>
+
+<p>对于JSONField注解，好像只对序列号的格式有影响，反序列化不管这个，不知道为什么，
+只能自己写个解析类了，不过这样就更灵活了，可以在里面写很多处理逻辑，
+比如json字符串里面日期格式并不是标准格式的时候，就可以先转成标准格式再去解析了。</p>
+]]></content>
+  </entry>
+  
+</feed>

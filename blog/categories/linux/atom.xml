@@ -1,0 +1,119 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+
+  <title><![CDATA[Category: linux | Hi, I’m Yang Peng]]></title>
+  <link href="http://yeangpeng.tech/blog/categories/linux/atom.xml" rel="self"/>
+  <link href="http://yeangpeng.tech/"/>
+  <updated>2016-02-18T15:37:18+08:00</updated>
+  <id>http://yeangpeng.tech/</id>
+  <author>
+    <name><![CDATA[Yang Peng]]></name>
+    <email><![CDATA[me@yangpeng.tech]]></email>
+  </author>
+  <generator uri="http://octopress.org/">Octopress</generator>
+
+  
+  <entry>
+    <title type="html"><![CDATA[centos6更新yum源]]></title>
+    <link href="http://yeangpeng.tech/blog/2015/04/13/centos-yum/"/>
+    <updated>2015-04-13T19:02:42+08:00</updated>
+    <id>http://yeangpeng.tech/blog/2015/04/13/centos-yum</id>
+    <content type="html"><![CDATA[<h4>先备份</h4>
+
+<pre><code class="bash">mv /etc/yum.repos.d/CentOS-Base.repo{,.bak}
+</code></pre>
+
+<h4>修改CentOS-Base.repo</h4>
+
+<pre><code># CentOS-Base.repo
+#
+# The mirror system uses the connecting IP address of the client and the
+# update status of each mirror to pick mirrors that are updated to and
+# geographically close to the client. You should use this for CentOS updates
+# unless you are manually picking other mirrors.
+#
+# If the mirrorlist= does not work for you, as a fall back you can try the 
+# remarked out baseurl= line instead.
+#
+#
+
+[base]
+name=CentOS-$releasever - Base
+#mirrorlist=http://mirrorlist.centos.org/?release=$releasever&amp;arch=$basearch&amp;repo=os
+baseurl=http://mirrors.163.com/centos/$releasever/os/$basearch/
+gpgcheck=1
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-CentOS-6
+
+#released updates 
+[updates]
+name=CentOS-$releasever - Updates
+#mirrorlist=http://mirrorlist.centos.org/?release=$releasever&amp;arch=$basearch&amp;repo=updates
+baseurl=http://mirrors.163.com/centos/$releasever/updates/$basearch/
+gpgcheck=1
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-CentOS-6
+
+#additional packages that may be useful
+[extras]
+name=CentOS-$releasever - Extras
+#mirrorlist=http://mirrorlist.centos.org/?release=$releasever&amp;arch=$basearch&amp;repo=extras
+baseurl=http://mirrors.163.com/centos/$releasever/extras/$basearch/
+gpgcheck=1
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-CentOS-6
+
+#additional packages that extend functionality of existing packages
+[centosplus]
+name=CentOS-$releasever - Plus
+#mirrorlist=http://mirrorlist.centos.org/?release=$releasever&amp;arch=$basearch&amp;repo=centosplus
+baseurl=http://mirrors.163.com/centos/$releasever/centosplus/$basearch/
+gpgcheck=1
+enabled=0
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-CentOS-6
+
+#contrib - packages by Centos Users
+[contrib]
+name=CentOS-$releasever - Contrib
+#mirrorlist=http://mirrorlist.centos.org/?release=$releasever&amp;arch=$basearch&amp;repo=contrib
+baseurl=http://mirrors.163.com/centos/$releasever/contrib/$basearch/
+gpgcheck=1
+enabled=0
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-CentOS-6
+</code></pre>
+
+<p>接下来我们来更新下yum：<!--more-->
+<code>
+    yum clean all
+    yum makecache  # 将服务器上的软件包信息缓存到本地,以提高搜索安装软件的速度
+    yum install vim*  # 测试域名是否可用
+</code></p>
+
+<h4>附：增加RPMforge源</h4>
+
+<ul>
+<li>download the rpmforge package：
+<a href="http://packages.sw.be/rpmforge-release/rpmforge-release-0.5.2-2.el6.rf.i686.rpm">http://packages.sw.be/rpmforge-release/rpmforge-release-0.5.2-2.el6.rf.i686.rpm</a></li>
+<li>Install DAG’s GPG key
+<code>
+sudo rpm --import http://apt.sw.be/RPM-GPG-KEY.dag.txt
+</code>
+如果上面出现错误，确认下：
+<code>
+sudo rpm -K rpmforge-release-0.5.2-2.el6.rf.*.rpm
+</code></li>
+<li>然后安装rpm
+<code>
+sudo rpm -i rpmforge-release-0.5.2-2.el6.rf.*.rpm
+</code></li>
+<li>试试看：
+<code>
+sudo yum install htop
+</code></li>
+<li>开始更新系统：
+<code>
+sudo yum update
+</code></li>
+</ul>
+
+]]></content>
+  </entry>
+  
+</feed>

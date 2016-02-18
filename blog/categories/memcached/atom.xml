@@ -1,0 +1,507 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+
+  <title><![CDATA[Category: memcached | Hi, I’m Yang Peng]]></title>
+  <link href="http://yeangpeng.tech/blog/categories/memcached/atom.xml" rel="self"/>
+  <link href="http://yeangpeng.tech/"/>
+  <updated>2016-02-18T15:37:18+08:00</updated>
+  <id>http://yeangpeng.tech/</id>
+  <author>
+    <name><![CDATA[Yang Peng]]></name>
+    <email><![CDATA[me@yangpeng.tech]]></email>
+  </author>
+  <generator uri="http://octopress.org/">Octopress</generator>
+
+  
+  <entry>
+    <title type="html"><![CDATA[使用xmemcached客户端]]></title>
+    <link href="http://yeangpeng.tech/blog/2015/04/19/xmemecached/"/>
+    <updated>2015-04-19T16:36:41+08:00</updated>
+    <id>http://yeangpeng.tech/blog/2015/04/19/xmemecached</id>
+    <content type="html"><![CDATA[<p>Xmemcached是基于java nio实现的高性能可扩展的memcached客户端。它的主要特点：</p>
+
+<ol>
+<li>高性能，稳定可靠，已经在众多公司的众多项目里得到应用。</li>
+<li>功能完备：客户端分布式、权重、最新最完整的协议支持。</li>
+<li>可扩展，易于集成</li>
+<li>可动态增删memached节点</li>
+<li>客户端操作统计</li>
+<li>NIO连接池</li>
+</ol>
+
+
+<p>等等，更多信息请见wiki文档。废话不多讲，先上代码：<!--more-->
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+<span class='line-number'>34</span>
+<span class='line-number'>35</span>
+<span class='line-number'>36</span>
+<span class='line-number'>37</span>
+<span class='line-number'>38</span>
+<span class='line-number'>39</span>
+<span class='line-number'>40</span>
+<span class='line-number'>41</span>
+<span class='line-number'>42</span>
+<span class='line-number'>43</span>
+<span class='line-number'>44</span>
+<span class='line-number'>45</span>
+<span class='line-number'>46</span>
+<span class='line-number'>47</span>
+<span class='line-number'>48</span>
+<span class='line-number'>49</span>
+<span class='line-number'>50</span>
+<span class='line-number'>51</span>
+<span class='line-number'>52</span>
+<span class='line-number'>53</span>
+<span class='line-number'>54</span>
+<span class='line-number'>55</span>
+<span class='line-number'>56</span>
+<span class='line-number'>57</span>
+<span class='line-number'>58</span>
+<span class='line-number'>59</span>
+<span class='line-number'>60</span>
+<span class='line-number'>61</span>
+<span class='line-number'>62</span>
+<span class='line-number'>63</span>
+<span class='line-number'>64</span>
+<span class='line-number'>65</span>
+<span class='line-number'>66</span>
+<span class='line-number'>67</span>
+<span class='line-number'>68</span>
+<span class='line-number'>69</span>
+<span class='line-number'>70</span>
+<span class='line-number'>71</span>
+<span class='line-number'>72</span>
+<span class='line-number'>73</span>
+<span class='line-number'>74</span>
+<span class='line-number'>75</span>
+<span class='line-number'>76</span>
+<span class='line-number'>77</span>
+<span class='line-number'>78</span>
+<span class='line-number'>79</span>
+<span class='line-number'>80</span>
+<span class='line-number'>81</span>
+<span class='line-number'>82</span>
+<span class='line-number'>83</span>
+<span class='line-number'>84</span>
+<span class='line-number'>85</span>
+<span class='line-number'>86</span>
+<span class='line-number'>87</span>
+<span class='line-number'>88</span>
+<span class='line-number'>89</span>
+<span class='line-number'>90</span>
+<span class='line-number'>91</span>
+<span class='line-number'>92</span>
+<span class='line-number'>93</span>
+<span class='line-number'>94</span>
+<span class='line-number'>95</span>
+<span class='line-number'>96</span>
+<span class='line-number'>97</span>
+<span class='line-number'>98</span>
+<span class='line-number'>99</span>
+<span class='line-number'>100</span>
+<span class='line-number'>101</span>
+<span class='line-number'>102</span>
+<span class='line-number'>103</span>
+<span class='line-number'>104</span>
+<span class='line-number'>105</span>
+<span class='line-number'>106</span>
+<span class='line-number'>107</span>
+<span class='line-number'>108</span>
+<span class='line-number'>109</span>
+<span class='line-number'>110</span>
+<span class='line-number'>111</span>
+<span class='line-number'>112</span>
+<span class='line-number'>113</span>
+<span class='line-number'>114</span>
+<span class='line-number'>115</span>
+<span class='line-number'>116</span>
+<span class='line-number'>117</span>
+<span class='line-number'>118</span>
+<span class='line-number'>119</span>
+<span class='line-number'>120</span>
+<span class='line-number'>121</span>
+<span class='line-number'>122</span>
+<span class='line-number'>123</span>
+<span class='line-number'>124</span>
+<span class='line-number'>125</span>
+<span class='line-number'>126</span>
+<span class='line-number'>127</span>
+<span class='line-number'>128</span>
+<span class='line-number'>129</span>
+<span class='line-number'>130</span>
+<span class='line-number'>131</span>
+<span class='line-number'>132</span>
+<span class='line-number'>133</span>
+<span class='line-number'>134</span>
+<span class='line-number'>135</span>
+<span class='line-number'>136</span>
+<span class='line-number'>137</span>
+<span class='line-number'>138</span>
+<span class='line-number'>139</span>
+<span class='line-number'>140</span>
+<span class='line-number'>141</span>
+<span class='line-number'>142</span>
+<span class='line-number'>143</span>
+<span class='line-number'>144</span>
+<span class='line-number'>145</span>
+<span class='line-number'>146</span>
+<span class='line-number'>147</span>
+<span class='line-number'>148</span>
+<span class='line-number'>149</span>
+<span class='line-number'>150</span>
+<span class='line-number'>151</span>
+<span class='line-number'>152</span>
+<span class='line-number'>153</span>
+<span class='line-number'>154</span>
+<span class='line-number'>155</span>
+<span class='line-number'>156</span>
+<span class='line-number'>157</span>
+<span class='line-number'>158</span>
+<span class='line-number'>159</span>
+<span class='line-number'>160</span>
+<span class='line-number'>161</span>
+<span class='line-number'>162</span>
+<span class='line-number'>163</span>
+<span class='line-number'>164</span>
+<span class='line-number'>165</span>
+<span class='line-number'>166</span>
+<span class='line-number'>167</span>
+<span class='line-number'>168</span>
+<span class='line-number'>169</span>
+</pre></td><td class='code'><pre><code class='java'><span class='line'><span class="kn">package</span> <span class="n">xmemcache</span><span class="o">;&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="kn">import</span> <span class="nn">java.io.IOException</span><span class="o">;</span>
+</span><span class='line'><span class="kn">import</span> <span class="nn">java.util.concurrent.TimeoutException</span><span class="o">;&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="kn">import</span> <span class="nn">net.rubyeye.xmemcached.Counter</span><span class="o">;</span>
+</span><span class='line'><span class="kn">import</span> <span class="nn">net.rubyeye.xmemcached.GetsResponse</span><span class="o">;</span>
+</span><span class='line'><span class="kn">import</span> <span class="nn">net.rubyeye.xmemcached.MemcachedClient</span><span class="o">;</span>
+</span><span class='line'><span class="kn">import</span> <span class="nn">net.rubyeye.xmemcached.MemcachedClientBuilder</span><span class="o">;</span>
+</span><span class='line'><span class="kn">import</span> <span class="nn">net.rubyeye.xmemcached.XMemcachedClientBuilder</span><span class="o">;</span>
+</span><span class='line'><span class="kn">import</span> <span class="nn">net.rubyeye.xmemcached.auth.AuthInfo</span><span class="o">;</span>
+</span><span class='line'><span class="kn">import</span> <span class="nn">net.rubyeye.xmemcached.command.BinaryCommandFactory</span><span class="o">;</span>
+</span><span class='line'><span class="kn">import</span> <span class="nn">net.rubyeye.xmemcached.exception.MemcachedException</span><span class="o">;</span>
+</span><span class='line'><span class="kn">import</span> <span class="nn">net.rubyeye.xmemcached.transcoders.StringTranscoder</span><span class="o">;</span>
+</span><span class='line'><span class="kn">import</span> <span class="nn">net.rubyeye.xmemcached.utils.AddrUtil</span><span class="o">;&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;/&lt;</span><span class="n">strong</span><span class="o">&gt;</span>
+</span><span class='line'> <span class="o">*</span> <span class="n">Description</span> <span class="n">of</span> <span class="k">this</span> <span class="n">file</span><span class="o">.</span>
+</span><span class='line'> <span class="o">*</span>
+</span><span class='line'> <span class="o">*</span> <span class="nd">@author</span> <span class="n">XiongNeng</span>
+</span><span class='line'> <span class="o">*</span> <span class="nd">@version</span> <span class="mf">1.0</span>
+</span><span class='line'> <span class="o">*</span> <span class="nd">@since</span> <span class="mi">13</span><span class="o">-</span><span class="mi">7</span><span class="o">-</span><span class="mi">13</span>
+</span><span class='line'> <span class="o">*/</span>
+</span><span class='line'><span class="kd">public</span> <span class="kd">class</span> <span class="nc">SimpleCache</span> <span class="o">{</span>
+</span><span class='line'>    <span class="kd">private</span> <span class="n">String</span> <span class="n">addresses</span> <span class="o">=</span> <span class="o">&amp;</span><span class="n">ldquo</span><span class="o">;</span><span class="mf">192.168</span><span class="o">.</span><span class="mf">0.5</span><span class="o">:</span><span class="mi">11211</span><span class="o">&amp;</span><span class="n">rdquo</span><span class="o">;;</span>
+</span><span class='line'>    <span class="kd">public</span> <span class="kt">void</span> <span class="nf">test1</span><span class="o">()</span> <span class="kd">throws</span> <span class="n">IOException</span> <span class="o">{</span>
+</span><span class='line'>        <span class="n">MemcachedClientBuilder</span> <span class="n">builder</span> <span class="o">=</span> <span class="k">new</span> <span class="nf">XMemcachedClientBuilder</span><span class="o">(</span>
+</span><span class='line'>                <span class="n">AddrUtil</span><span class="o">.</span><span class="na">getAddresses</span><span class="o">(</span><span class="n">addresses</span><span class="o">));</span>
+</span><span class='line'>        <span class="c1">// AddrUtil.getAddresses(&amp;ldquo;server1:11211 server2:11211&amp;rdquo;)</span>
+</span><span class='line'>        <span class="c1">// 宕机报警</span>
+</span><span class='line'>        <span class="n">builder</span><span class="o">.</span><span class="na">setFailureMode</span><span class="o">(</span><span class="kc">true</span><span class="o">);</span>
+</span><span class='line'>        <span class="c1">// 使用二进制文件</span>
+</span><span class='line'>        <span class="n">builder</span><span class="o">.</span><span class="na">setCommandFactory</span><span class="o">(</span><span class="k">new</span> <span class="nf">BinaryCommandFactory</span><span class="o">());</span>
+</span><span class='line'>        <span class="o">/&lt;/</span><span class="n">strong</span><span class="o">&gt;</span>
+</span><span class='line'>         <span class="o">*</span> <span class="n">设置连接池大小</span><span class="err">，</span><span class="n">即客户端个数</span>
+</span><span class='line'>         <span class="o">*</span> <span class="n">In</span> <span class="n">a</span> <span class="n">high</span> <span class="n">concurrent</span> <span class="n">enviroment</span><span class="o">,</span><span class="n">you</span> <span class="n">may</span> <span class="n">want</span> <span class="n">to</span> <span class="n">pool</span> <span class="n">memcached</span> <span class="n">clients</span><span class="o">.</span>
+</span><span class='line'>         <span class="o">*</span> <span class="n">But</span> <span class="n">a</span> <span class="n">xmemcached</span> <span class="n">client</span> <span class="n">has</span> <span class="n">to</span> <span class="n">start</span> <span class="n">a</span> <span class="n">reactor</span> <span class="n">thread</span> <span class="n">and</span> <span class="n">some</span> <span class="n">thread</span> <span class="n">pools</span><span class="o">,</span>
+</span><span class='line'>         <span class="o">*</span> <span class="k">if</span> <span class="n">you</span> <span class="n">create</span> <span class="n">too</span> <span class="n">many</span> <span class="n">clients</span><span class="o">,</span><span class="n">the</span> <span class="n">cost</span> <span class="n">is</span> <span class="n">very</span> <span class="n">large</span><span class="o">.</span>
+</span><span class='line'>         <span class="o">*</span> <span class="n">Xmemcached</span> <span class="n">supports</span> <span class="n">connection</span> <span class="n">pool</span> <span class="n">instreadof</span> <span class="n">client</span> <span class="n">pool</span><span class="o">.</span>
+</span><span class='line'>         <span class="o">*</span> <span class="n">you</span> <span class="n">can</span> <span class="n">create</span> <span class="n">more</span> <span class="n">connections</span> <span class="n">to</span> <span class="n">one</span> <span class="n">or</span> <span class="n">more</span> <span class="n">memcached</span> <span class="n">servers</span><span class="o">,</span>
+</span><span class='line'>         <span class="o">*</span> <span class="n">and</span> <span class="n">these</span> <span class="n">connections</span> <span class="n">share</span> <span class="n">the</span> <span class="n">same</span> <span class="n">reactor</span> <span class="n">and</span> <span class="n">thread</span> <span class="n">pools</span><span class="o">,</span>
+</span><span class='line'>         <span class="o">*</span> <span class="n">it</span> <span class="n">will</span> <span class="n">reduce</span> <span class="n">the</span> <span class="n">cost</span> <span class="n">of</span> <span class="n">system</span><span class="o">.</span>
+</span><span class='line'>         <span class="o">*</span>  <span class="n">默认的pool</span> <span class="n">size是1</span><span class="err">。</span><span class="n">设置这一数值不一定能提高性能</span><span class="err">，</span><span class="n">请依据你的项目的测试结果为准</span><span class="err">。</span>
+</span><span class='line'>         <span class="o">*</span>  <span class="n">初步的测试表明只有在大并发下才有提升</span><span class="err">。</span>
+</span><span class='line'>         <span class="o">*</span>  <span class="n">设置连接池的一个不良后果就是</span><span class="err">，</span><span class="n">同一个memcached的连接之间的数据更新并非同步的</span>
+</span><span class='line'>         <span class="o">*</span>  <span class="n">因此你的应用需要自己保证数据更新的原子性</span><span class="err">（</span><span class="n">采用CAS或者数据之间毫无关联</span><span class="err">）。</span>
+</span><span class='line'>         <span class="o">&lt;</span><span class="n">em</span><span class="o">&gt;/</span>
+</span><span class='line'>        <span class="n">builder</span><span class="o">.</span><span class="na">setConnectionPoolSize</span><span class="o">(</span><span class="mi">10</span><span class="o">);</span>
+</span><span class='line'>        <span class="n">MemcachedClient</span> <span class="n">client</span> <span class="o">=</span> <span class="n">builder</span><span class="o">.</span><span class="na">build</span><span class="o">();</span>
+</span><span class='line'>        <span class="k">try</span> <span class="o">{</span>
+</span><span class='line'>            <span class="cm">/**</span>
+</span><span class='line'><span class="cm">             * 第一个是存储的key名称，</span>
+</span><span class='line'><span class="cm">             * 第二个是expire时间（单位秒），超过这个时间,memcached将这个数据替换出去，0表示永久存储（默认是一个月)</span>
+</span><span class='line'><span class="cm">             * 第三个参数就是实际存储的数据</span>
+</span><span class='line'><span class="cm">             &lt;/em&gt;/</span>
+</span><span class='line'><span class="cm">            client.set(&amp;ldquo;hello&amp;rdquo;, 0, &amp;ldquo;Hello,xmemcached&amp;rdquo;);</span>
+</span><span class='line'><span class="cm">            String value = client.get(&amp;ldquo;hello&amp;rdquo;);</span>
+</span><span class='line'><span class="cm">            System.out.println(&amp;ldquo;hello=&amp;rdquo; + value);</span>
+</span><span class='line'><span class="cm">            client.delete(&amp;ldquo;hello&amp;rdquo;);</span>
+</span><span class='line'><span class="cm">            value = client.get(&amp;ldquo;hello&amp;rdquo;);</span>
+</span><span class='line'><span class="cm">            System.out.println(&amp;ldquo;hello=&amp;rdquo; + value);&lt;/p&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="cm">&lt;pre&gt;&lt;code&gt;        // value=client.get(“hello”,3000);</span>
+</span><span class='line'>
+</span><span class='line'><span class="cm">        /**</span>
+</span><span class='line'><span class="cm">         * Memcached是通过cas协议实现原子更新，所谓原子更新就是compare and set，</span>
+</span><span class='line'><span class="cm">         * 原理类似乐观锁，每次请求存储某个数据同时要附带一个cas值， memcached比对这个cas值与当前存储数据的cas值是否相等，</span>
+</span><span class='line'><span class="cm">         * 如果相等就让新的数据覆盖老的数据，如果不相等就认为更新失败， 这在并发环境下特别有用</span>
+</span><span class='line'><span class="cm">         */</span>
+</span><span class='line'>        <span class="n">GetsResponse</span><span class="o">&amp;</span><span class="n">lt</span><span class="o">;</span><span class="n">Integer</span><span class="o">&amp;</span><span class="n">gt</span><span class="o">;</span> <span class="n">result</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="na">gets</span><span class="o">(</span><span class="s">&quot;a&quot;</span><span class="o">);</span>
+</span><span class='line'>        <span class="k">if</span> <span class="o">(</span><span class="n">result</span> <span class="o">==</span> <span class="kc">null</span><span class="o">)</span> <span class="o">{</span>
+</span><span class='line'>            <span class="n">client</span><span class="o">.</span><span class="na">add</span><span class="o">(</span><span class="s">&quot;a&quot;</span><span class="o">,</span> <span class="mi">0</span><span class="o">,</span> <span class="mi">12</span><span class="o">);</span>
+</span><span class='line'>        <span class="o">}</span>
+</span><span class='line'>        <span class="n">result</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="na">gets</span><span class="o">(</span><span class="s">&quot;a&quot;</span><span class="o">);</span>
+</span><span class='line'>        <span class="kt">long</span> <span class="n">cas</span> <span class="o">=</span> <span class="n">result</span><span class="o">.</span><span class="na">getCas</span><span class="o">();</span>
+</span><span class='line'>        <span class="c1">// 尝试将a的值更新为2</span>
+</span><span class='line'>        <span class="k">if</span> <span class="o">(!</span><span class="n">client</span><span class="o">.</span><span class="na">cas</span><span class="o">(</span><span class="s">&quot;a&quot;</span><span class="o">,</span> <span class="mi">0</span><span class="o">,</span> <span class="mi">2</span><span class="o">,</span> <span class="n">cas</span><span class="o">))</span> <span class="o">{</span>
+</span><span class='line'>            <span class="n">System</span><span class="o">.</span><span class="na">err</span><span class="o">.</span><span class="na">println</span><span class="o">(</span><span class="s">&quot;cas error&quot;</span><span class="o">);</span>
+</span><span class='line'>        <span class="o">}</span>
+</span><span class='line'>    <span class="o">}</span> <span class="k">catch</span> <span class="o">(</span><span class="n">MemcachedException</span> <span class="n">e</span><span class="o">)</span> <span class="o">{</span>
+</span><span class='line'>        <span class="n">System</span><span class="o">.</span><span class="na">err</span><span class="o">.</span><span class="na">println</span><span class="o">(</span><span class="s">&quot;MemcachedClient operation fail&quot;</span><span class="o">);</span>
+</span><span class='line'>        <span class="n">e</span><span class="o">.</span><span class="na">printStackTrace</span><span class="o">();</span>
+</span><span class='line'>    <span class="o">}</span> <span class="k">catch</span> <span class="o">(</span><span class="n">TimeoutException</span> <span class="n">e</span><span class="o">)</span> <span class="o">{</span>
+</span><span class='line'>        <span class="n">System</span><span class="o">.</span><span class="na">err</span><span class="o">.</span><span class="na">println</span><span class="o">(</span><span class="s">&quot;MemcachedClient operation timeout&quot;</span><span class="o">);</span>
+</span><span class='line'>        <span class="n">e</span><span class="o">.</span><span class="na">printStackTrace</span><span class="o">();</span>
+</span><span class='line'>    <span class="o">}</span> <span class="k">catch</span> <span class="o">(</span><span class="n">InterruptedException</span> <span class="n">e</span><span class="o">)</span> <span class="o">{</span>
+</span><span class='line'>        <span class="c1">// ignore</span>
+</span><span class='line'>    <span class="o">}</span>
+</span><span class='line'>    <span class="k">try</span> <span class="o">{</span>
+</span><span class='line'>        <span class="c1">// close memcached client</span>
+</span><span class='line'>        <span class="n">client</span><span class="o">.</span><span class="na">shutdown</span><span class="o">();</span>
+</span><span class='line'>    <span class="o">}</span> <span class="k">catch</span> <span class="o">(</span><span class="n">IOException</span> <span class="n">e</span><span class="o">)</span> <span class="o">{</span>
+</span><span class='line'>        <span class="n">System</span><span class="o">.</span><span class="na">err</span><span class="o">.</span><span class="na">println</span><span class="o">(</span><span class="s">&quot;Shutdown MemcachedClient fail&quot;</span><span class="o">);</span>
+</span><span class='line'>        <span class="n">e</span><span class="o">.</span><span class="na">printStackTrace</span><span class="o">();</span>
+</span><span class='line'>    <span class="o">}</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">}</span>
+</span><span class='line'>
+</span><span class='line'><span class="kd">public</span> <span class="kt">void</span> <span class="nf">test2</span><span class="o">()</span> <span class="kd">throws</span> <span class="n">TimeoutException</span><span class="o">,</span> <span class="n">InterruptedException</span><span class="o">,</span>
+</span><span class='line'>        <span class="n">MemcachedException</span><span class="o">,</span> <span class="n">IOException</span> <span class="o">{</span>
+</span><span class='line'>    <span class="n">MemcachedClientBuilder</span> <span class="n">builder</span> <span class="o">=</span> <span class="k">new</span> <span class="nf">XMemcachedClientBuilder</span><span class="o">(</span>
+</span><span class='line'>            <span class="n">AddrUtil</span><span class="o">.</span><span class="na">getAddresses</span><span class="o">(</span><span class="n">addresses</span><span class="o">));</span>
+</span><span class='line'>    <span class="n">MemcachedClient</span> <span class="n">client</span> <span class="o">=</span> <span class="n">builder</span><span class="o">.</span><span class="na">build</span><span class="o">();</span>
+</span><span class='line'>    <span class="n">client</span><span class="o">.</span><span class="na">flushAll</span><span class="o">();</span>
+</span><span class='line'>    <span class="k">if</span> <span class="o">(!</span><span class="n">client</span><span class="o">.</span><span class="na">set</span><span class="o">(</span><span class="s">&quot;hello&quot;</span><span class="o">,</span> <span class="mi">0</span><span class="o">,</span> <span class="s">&quot;world&quot;</span><span class="o">))</span> <span class="o">{</span>
+</span><span class='line'>        <span class="n">System</span><span class="o">.</span><span class="na">err</span><span class="o">.</span><span class="na">println</span><span class="o">(</span><span class="s">&quot;set error&quot;</span><span class="o">);</span>
+</span><span class='line'>    <span class="o">}</span>
+</span><span class='line'>    <span class="k">if</span> <span class="o">(</span><span class="n">client</span><span class="o">.</span><span class="na">add</span><span class="o">(</span><span class="s">&quot;hello&quot;</span><span class="o">,</span> <span class="mi">0</span><span class="o">,</span> <span class="s">&quot;dennis&quot;</span><span class="o">))</span> <span class="o">{</span>
+</span><span class='line'>        <span class="n">System</span><span class="o">.</span><span class="na">err</span><span class="o">.</span><span class="na">println</span><span class="o">(</span><span class="s">&quot;Add error,key is existed&quot;</span><span class="o">);</span>
+</span><span class='line'>    <span class="o">}</span>
+</span><span class='line'>    <span class="k">if</span> <span class="o">(!</span><span class="n">client</span><span class="o">.</span><span class="na">replace</span><span class="o">(</span><span class="s">&quot;hello&quot;</span><span class="o">,</span> <span class="mi">0</span><span class="o">,</span> <span class="s">&quot;dennis&quot;</span><span class="o">))</span> <span class="o">{</span>
+</span><span class='line'>        <span class="n">System</span><span class="o">.</span><span class="na">err</span><span class="o">.</span><span class="na">println</span><span class="o">(</span><span class="s">&quot;replace error&quot;</span><span class="o">);</span>
+</span><span class='line'>    <span class="o">}</span>
+</span><span class='line'>    <span class="n">client</span><span class="o">.</span><span class="na">append</span><span class="o">(</span><span class="s">&quot;hello&quot;</span><span class="o">,</span> <span class="s">&quot; good&quot;</span><span class="o">);</span>
+</span><span class='line'>    <span class="n">client</span><span class="o">.</span><span class="na">prepend</span><span class="o">(</span><span class="s">&quot;hello&quot;</span><span class="o">,</span> <span class="s">&quot;hello &quot;</span><span class="o">);</span>
+</span><span class='line'>    <span class="n">String</span> <span class="n">name</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="na">get</span><span class="o">(</span><span class="s">&quot;hello&quot;</span><span class="o">,</span> <span class="k">new</span> <span class="nf">StringTranscoder</span><span class="o">());</span>
+</span><span class='line'>    <span class="n">System</span><span class="o">.</span><span class="na">out</span><span class="o">.</span><span class="na">println</span><span class="o">(</span><span class="n">name</span><span class="o">);</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="cm">/**</span>
+</span><span class='line'><span class="cm">     * 而删除数据则是通过deleteWithNoReply方法，这个方法删除数据并且告诉memcached</span>
+</span><span class='line'><span class="cm">     * 不用返回应答，因此这个方法不会等待应答直接返回，特别适合于批量处理</span>
+</span><span class='line'><span class="cm">     */</span>
+</span><span class='line'>    <span class="n">client</span><span class="o">.</span><span class="na">deleteWithNoReply</span><span class="o">(</span><span class="s">&quot;hello&quot;</span><span class="o">);</span>
+</span><span class='line'><span class="o">}</span>
+</span><span class='line'>
+</span><span class='line'><span class="kd">public</span> <span class="kt">void</span> <span class="nf">incrDecr</span><span class="o">()</span> <span class="kd">throws</span> <span class="n">IOException</span><span class="o">,</span> <span class="n">TimeoutException</span><span class="o">,</span>
+</span><span class='line'>        <span class="n">InterruptedException</span><span class="o">,</span> <span class="n">MemcachedException</span> <span class="o">{</span>
+</span><span class='line'>    <span class="n">MemcachedClientBuilder</span> <span class="n">builder</span> <span class="o">=</span> <span class="k">new</span> <span class="nf">XMemcachedClientBuilder</span><span class="o">(</span>
+</span><span class='line'>            <span class="n">AddrUtil</span><span class="o">.</span><span class="na">getAddresses</span><span class="o">(</span><span class="n">addresses</span><span class="o">));</span>
+</span><span class='line'>    <span class="n">MemcachedClient</span> <span class="n">client</span> <span class="o">=</span> <span class="n">builder</span><span class="o">.</span><span class="na">build</span><span class="o">();</span>
+</span><span class='line'>    <span class="cm">/**</span>
+</span><span class='line'><span class="cm">     * 第一个参数指定递增的key名称， 第二个参数指定递增的幅度大小， 第三个参数指定当key不存在的情况下的初始值。</span>
+</span><span class='line'><span class="cm">     * 两个参数的重载方法省略了第三个参数，默认指定为0。</span>
+</span><span class='line'><span class="cm">     */</span>
+</span><span class='line'>    <span class="k">assert</span> <span class="o">(</span><span class="mi">1</span> <span class="o">==</span> <span class="n">client</span><span class="o">.</span><span class="na">incr</span><span class="o">(</span><span class="s">&quot;a&quot;</span><span class="o">,</span> <span class="mi">5</span><span class="o">,</span> <span class="mi">1</span><span class="o">));</span>
+</span><span class='line'>    <span class="k">assert</span> <span class="o">(</span><span class="mi">6</span> <span class="o">==</span> <span class="n">client</span><span class="o">.</span><span class="na">incr</span><span class="o">(</span><span class="s">&quot;a&quot;</span><span class="o">,</span> <span class="mi">5</span><span class="o">));</span>
+</span><span class='line'>    <span class="k">assert</span> <span class="o">(</span><span class="mi">10</span> <span class="o">==</span> <span class="n">client</span><span class="o">.</span><span class="na">incr</span><span class="o">(</span><span class="s">&quot;a&quot;</span><span class="o">,</span> <span class="mi">4</span><span class="o">));</span>
+</span><span class='line'>    <span class="k">assert</span> <span class="o">(</span><span class="mi">9</span> <span class="o">==</span> <span class="n">client</span><span class="o">.</span><span class="na">decr</span><span class="o">(</span><span class="s">&quot;a&quot;</span><span class="o">,</span> <span class="mi">1</span><span class="o">));</span>
+</span><span class='line'>    <span class="k">assert</span> <span class="o">(</span><span class="mi">7</span> <span class="o">==</span> <span class="n">client</span><span class="o">.</span><span class="na">decr</span><span class="o">(</span><span class="s">&quot;a&quot;</span><span class="o">,</span> <span class="mi">2</span><span class="o">));</span>
+</span><span class='line'><span class="o">}</span>
+</span><span class='line'>
+</span><span class='line'><span class="kd">public</span> <span class="kt">void</span> <span class="nf">counter</span><span class="o">()</span> <span class="kd">throws</span> <span class="n">Exception</span> <span class="o">{</span>
+</span><span class='line'>    <span class="n">MemcachedClientBuilder</span> <span class="n">builder</span> <span class="o">=</span> <span class="k">new</span> <span class="nf">XMemcachedClientBuilder</span><span class="o">(</span>
+</span><span class='line'>            <span class="n">AddrUtil</span><span class="o">.</span><span class="na">getAddresses</span><span class="o">(</span><span class="n">addresses</span><span class="o">));</span>
+</span><span class='line'>    <span class="n">MemcachedClient</span> <span class="n">client</span> <span class="o">=</span> <span class="n">builder</span><span class="o">.</span><span class="na">build</span><span class="o">();</span>
+</span><span class='line'>    <span class="n">Counter</span> <span class="n">counter</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="na">getCounter</span><span class="o">(</span><span class="s">&quot;counter&quot;</span><span class="o">,</span> <span class="mi">0</span><span class="o">);</span>
+</span><span class='line'>    <span class="n">counter</span><span class="o">.</span><span class="na">incrementAndGet</span><span class="o">();</span>
+</span><span class='line'>    <span class="n">counter</span><span class="o">.</span><span class="na">decrementAndGet</span><span class="o">();</span>
+</span><span class='line'>    <span class="n">counter</span><span class="o">.</span><span class="na">addAndGet</span><span class="o">(-</span><span class="mi">10</span><span class="o">);</span>
+</span><span class='line'><span class="o">}</span>
+</span><span class='line'>
+</span><span class='line'><span class="kd">public</span> <span class="kt">void</span> <span class="nf">auth</span><span class="o">()</span> <span class="kd">throws</span> <span class="n">Exception</span> <span class="o">{</span>
+</span><span class='line'>    <span class="n">MemcachedClientBuilder</span> <span class="n">builder</span> <span class="o">=</span> <span class="k">new</span> <span class="nf">XMemcachedClientBuilder</span><span class="o">(</span>
+</span><span class='line'>            <span class="n">AddrUtil</span><span class="o">.</span><span class="na">getAddresses</span><span class="o">(</span><span class="n">addresses</span><span class="o">));</span>
+</span><span class='line'>    <span class="n">builder</span><span class="o">.</span><span class="na">addAuthInfo</span><span class="o">(</span><span class="n">AddrUtil</span><span class="o">.</span><span class="na">getOneAddress</span><span class="o">(</span><span class="n">addresses</span><span class="o">),</span>
+</span><span class='line'>            <span class="n">AuthInfo</span><span class="o">.</span><span class="na">typical</span><span class="o">(</span><span class="s">&quot;cacheuser&quot;</span><span class="o">,</span> <span class="s">&quot;123456&quot;</span><span class="o">));</span>
+</span><span class='line'>    <span class="c1">// Must use binary protocol</span>
+</span><span class='line'>    <span class="n">builder</span><span class="o">.</span><span class="na">setCommandFactory</span><span class="o">(</span><span class="k">new</span> <span class="nf">BinaryCommandFactory</span><span class="o">());</span>
+</span><span class='line'>    <span class="n">MemcachedClient</span> <span class="n">client</span> <span class="o">=</span> <span class="n">builder</span><span class="o">.</span><span class="na">build</span><span class="o">();</span>
+</span><span class='line'><span class="o">}</span>
+</span><span class='line'>
+</span><span class='line'><span class="kd">public</span> <span class="kt">void</span> <span class="nf">nioPool</span><span class="o">()</span> <span class="kd">throws</span> <span class="n">Exception</span> <span class="o">{</span>
+</span><span class='line'>    <span class="n">MemcachedClientBuilder</span> <span class="n">builder</span> <span class="o">=</span> <span class="k">new</span> <span class="nf">XMemcachedClientBuilder</span><span class="o">(</span>
+</span><span class='line'>            <span class="n">AddrUtil</span><span class="o">.</span><span class="na">getAddresses</span><span class="o">(</span><span class="s">&quot;localhost:11211&quot;</span><span class="o">));</span>
+</span><span class='line'>    <span class="n">builder</span><span class="o">.</span><span class="na">setConnectionPoolSize</span><span class="o">(</span><span class="mi">5</span><span class="o">);</span>
+</span><span class='line'><span class="o">}</span>
+</span><span class='line'><span class="o">&lt;/</span><span class="n">code</span><span class="o">&gt;&lt;/</span><span class="n">pre</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;}</span>
+</span></code></pre></td></tr></table></div></figure></p>
+]]></content>
+  </entry>
+  
+  <entry>
+    <title type="html"><![CDATA[linux上安装memcached]]></title>
+    <link href="http://yeangpeng.tech/blog/2015/04/16/memcached-install/"/>
+    <updated>2015-04-16T15:52:35+08:00</updated>
+    <id>http://yeangpeng.tech/blog/2015/04/16/memcached-install</id>
+    <content type="html"><![CDATA[<p><strong>一 准备安装文件</strong></p>
+
+<p>下载memcached与libevent的安装文件：</p>
+
+<p>memcached下载地址：<a href="http://memcached.googlecode.com/files/memcached-1.4.15.tar.gz">memcached-1.4.15.tar.gz</a></p>
+
+<p>libevent下载地址：<a href="https://github.com/downloads/libevent/libevent/libevent-2.0.21-stable.tar.gz">libevent-2.0.21-stable.tar.gz</a></p>
+
+<p><strong>二 具体安装步骤</strong></p>
+
+<ol>
+<li>由于memcached依赖于libevent，因此需要安装libevent。由于linux系统可能默认已经安装libevent，执行命令：
+<code>
+rpm -qa|grep libevent
+</code></li>
+<li>查看系统是否带有该安装软件，如果有执行命令:
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+</pre></td><td class='code'><pre><code class='java'><span class='line'><span class="o">&lt;</span><span class="n">h1</span><span class="o">&gt;</span><span class="n">由于系统自带的版本旧</span><span class="err">，</span><span class="n">忽略依赖删除</span><span class="o">&lt;/</span><span class="n">h1</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="n">rpm</span> <span class="o">-</span><span class="n">e</span> <span class="n">libevent</span><span class="o">-</span><span class="mf">1.4</span><span class="o">.</span><span class="mi">13</span><span class="o">-</span><span class="mi">4</span><span class="o">.</span><span class="na">el6</span><span class="o">.</span><span class="na">x86_64</span> <span class="err">–</span><span class="n">nodeps</span>
+</span></code></pre></td></tr></table></div></figure></p></li>
+<li><p>安装libevent命令：<!--more-->
+<code>
+tar zxvf libevent-2.0.21-stable.tar.gz
+cd libevent-2.0.21-stable
+./configure --prefix=/usr/local/libevent
+make
+make install
+</code>
+至此libevent安装完毕；</p></li>
+<li><p>安装memcached命令：
+<code>
+tar zxvf memcached-1.4.2.tar.gz
+cd memcached-memcached-1.4.2
+./configure --prefix=/usr/local/memcached --with-libevent=
+/usr/local/libevent/
+make
+make install
+</code>
+至此memcached安装完毕；</p></li>
+<li><p>可能存在的错误以及解决方案</p></li>
+</ol>
+
+
+<p>如果出现客户端连接不上memcached的情况，请将防火墙关闭或将防火墙中的memcached端口（11211端口）打开。</p>
+
+<ol>
+<li>启动memcached</li>
+</ol>
+
+
+<p>打开一个终端，输入以下命令：
+<code>
+/usr/local/memcached/bin/memcached -d -m 256 -u root -p 11211 -c 1024 –P /tmp/memcached.pid
+</code>
+启动参数说明：</p>
+
+<pre><code>-d 选项是启动一个守护进程。
+-u root 表示启动memcached的用户为root。
+-m 是分配给Memcache使用的内存数量，单位是MB，默认64MB。
+-M return error on memory exhausted (rather than removing items)。
+-u 是运行Memcache的用户，如果当前为root 的话，需要使用此参数指定用户。
+-p 是设置Memcache的TCP监听的端口，最好是1024以上的端口。
+-c 选项是最大运行的并发连接数，默认是1024。
+-P 是设置保存Memcache的pid文件。
+</code></pre>
+
+<p>另外还有个更详细的参数说明：</p>
+
+<pre><code>memcached 1.4.2
+-p &lt;num监听的TCP端口(默认: 11211)
+-U &lt;num监听的UDP端口(默认: 11211, 0表示不监听)
+-s &lt;file用于监听的UNIX套接字路径（禁用网络支持）
+-a &lt;maskUNIX套接字访问掩码，八进制数字（默认：0700）
+-l &lt;ip_addr监听的IP地址。（默认：INADDR_ANY，所有地址）
+-d 作为守护进程来运行。
+-r 最大核心文件限制。
+-u &lt;username设定进程所属用户。（只有root用户可以使用这个参数）
+-m &lt;num单个数据项的最大可用内存，以MB为单位。（默认：64MB）
+-M 内存用光时报错。（不会删除数据）
+-c &lt;num最大并发连接数。（默认：1024）
+-k 锁定所有内存页。注意你可以锁定的内存上限。
+试图分配更多内存会失败的，所以留意启动守护进程时所用的用户可分配的内存上限。
+（不是前面的 -u &lt;username参数；在sh下，使用命令"ulimit -S -l NUM_KB"来设置。）
+-v 提示信息（在事件循环中打印错误/警告信息。）
+-vv 详细信息（还打印客户端命令/响应）
+-vvv 超详细信息（还打印内部状态的变化）
+-h 打印这个帮助信息并退出。
+-i 打印memcached和libevent的许可。
+-P &lt;file保存进程ID到指定文件，只有在使用 -d 选项的时候才有意义。
+-f &lt;factor块大小增长因子。（默认：1.25）
+-n &lt;bytes分配给key+value+flags的最小空间（默认：48）
+-L 尝试使用大内存页（如果可用的话）。提高内存页尺寸可以减少"页表缓冲（TLB）"丢失次数，提高运行效率。
+为了从操作系统获得大内存页，memcached会把全部数据项分配到一个大区块。
+-D &lt;char使用 &lt;char作为前缀和ID的分隔符。
+这个用于按前缀获得状态报告。默认是":"（冒号）。
+如果指定了这个参数，则状态收集会自动开启；如果没指定，则需要用命令"stats detail on"来开启。
+-t &lt;num使用的线程数（默认：4）
+-R 每个连接可处理的最大请求数。
+-C 禁用CAS。
+-b 设置后台日志队列的长度（默认：1024）
+-B 绑定协议 - 可能值：ascii,binary,auto（默认）
+-I 重写每个数据页尺寸。调整数据项最大尺寸。
+</code></pre>
+
+<p>也可以启动多个守护进程，但是端口不能重复</p>
+
+<p>查看memcached启动命令：
+<code>
+ps aux|grep memcached
+</code>
+1. 停止memcached</p>
+
+<p>打开一个终端，输入以下命令：
+<code>
+ps -ef | grep memcached或者上面的ps命令也行，第二个字段为PID，比如10068
+</code>
+输入一下命令终止memcached服务：
+<code>
+kill -9 10068
+</code></p>
+]]></content>
+  </entry>
+  
+</feed>

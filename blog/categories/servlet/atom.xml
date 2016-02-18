@@ -1,0 +1,727 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+
+  <title><![CDATA[Category: servlet | Hi, I’m Yang Peng]]></title>
+  <link href="http://yeangpeng.tech/blog/categories/servlet/atom.xml" rel="self"/>
+  <link href="http://yeangpeng.tech/"/>
+  <updated>2016-02-18T15:37:18+08:00</updated>
+  <id>http://yeangpeng.tech/</id>
+  <author>
+    <name><![CDATA[Yang Peng]]></name>
+    <email><![CDATA[me@yangpeng.tech]]></email>
+  </author>
+  <generator uri="http://octopress.org/">Octopress</generator>
+
+  
+  <entry>
+    <title type="html"><![CDATA[servlet filter详解]]></title>
+    <link href="http://yeangpeng.tech/blog/2015/04/06/servlet-filter/"/>
+    <updated>2015-04-06T21:08:25+08:00</updated>
+    <id>http://yeangpeng.tech/blog/2015/04/06/servlet-filter</id>
+    <content type="html"><![CDATA[<p>在写一个springmvc项目中想对用户的请求进行拦截，只有登录用户才能访问资源。这时候可以使用到SpringMVC的拦截器Intercepter，但是这个只能局限在SpringMVC中使用，如果想更加通用一点，最好使用Servlet Filter实现这个需求。</p>
+
+<p>本文将通过几个实际的例子展示下Servlet中的Filter的使用。</p>
+
+<p><strong>1 我们为什么需要使用Filter？</strong></p>
+
+<p>通常我们会使用session来保存登录用户的信息，通过从session中取出保存的属性值来判断用户是否登录，但是如果我们有大量的请求方法，每个人方法中都这样去判断就会有很多重复代码，将来我们想改动下逻辑，那得改动所有的请求方法实现，所以这个是不可取的。</p>
+
+<p>这时候就是使用Servlet Filter的时候了，它是可插拔的，对于普通的action方法来讲是透明的。它会在执行其他方法之前或将结果返回给客户端之前来执行其他逻辑。</p>
+
+<p>以下几种场景下我们会使用到Servlet Filter：</p>
+
+<ul>
+<li>将请求的参数写入日志文件</li>
+<li>对于资源的访问进行统一的授权与验证</li>
+<li>在请求到达实际Servlet之前格式化请求内容或请求头</li>
+<li>压缩返回数据后发送给客户端</li>
+<li>修改返回内容，增加一些cookie、header等信息<!--more--></li>
+</ul>
+
+
+<p>前面提到过，Servlet是可插拔的，可以通过在web.xml中配置是否使用。如果我们定义了多个Filter，就会形成一个过滤器链。
+通过实现接口javax.servlet.Filter来创建一个过过滤器。</p>
+
+<p><strong>2. Filter接口</strong></p>
+
+<p>Filter接口包含了三个跟生命周期有关的方法，并且由Servlet容器来管理。它们分别是：
+<code>java
+void init(FilterConfig paramFilterConfig)
+</code></p>
+
+<p>当容器初始化这个Filter的时候被调用，并且只会被调用一次。因此在这个方法里面我们可以初始化一些资源。
+FilterConfig会被容器用来给Filter提供初始化参数以及Servlet Context对象。我们可以在这个方法中抛出ServletException异常。
+<code>java
+doFilter(ServletRequest paramServletRequest, ServletResponse paramServletResponse, FilterChain paramFilterChain)
+</code>
+这个方法在每次执行过滤的时候被调用，request和response被作为参数传递进来，FilterChain表示过滤器链，这是典型的责任链模式的实现例子。
+<code>java
+void destroy()
+</code></p>
+
+<p>这个方法再容器卸载掉filter的时候被调用。因此我们可以在里面将filter使用到的一些资源给释放掉。</p>
+
+<p><strong>3. WebFilter注解</strong></p>
+
+<p>在Servlet3.0中引入了注解javax.servlet.annotation.WebFilter。无需配置，简单实用，不过如果你需要经常改动Filter逻辑的话，还是建议你在web.xml文件中配置，因为代码中修改后必须重写编译发布才能生效。</p>
+
+<p><strong>4. web.xml中的Filter配置详解</strong></p>
+
+<p>像下面这样声明一个filter：</p>
+
+<pre><code class="xml">&lt;filter&gt;
+  &lt;filter-name&gt;RequestLoggingFilter&lt;/filter-name&gt; &lt;!-- mandatory --&gt;
+  &lt;filter-class&gt;com.journaldev.servlet.filters.RequestLoggingFilter&lt;/filter-class&gt; &lt;!-- mandatory --&gt;
+  &lt;init-param&gt; &lt;!-- optional --&gt;
+  &lt;param-name&gt;test&lt;/param-name&gt;
+  &lt;param-value&gt;testValue&lt;/param-value&gt;
+  &lt;/init-param&gt;
+&lt;/filter&gt;
+</code></pre>
+
+<p>然后定义一个mapping：</p>
+
+<pre><code class="xml">&lt;filter-mapping&gt;
+  &lt;filter-name&gt;RequestLoggingFilter&lt;/filter-name&gt; &lt;!-- 必填 --&gt;
+  &lt;url-pattern&gt;/*&lt;/url-pattern&gt; &lt;!-- url-pattern 或 servlet-name必须指定至少一个 --&gt;
+  &lt;servlet-name&gt;LoginServlet&lt;/servlet-name&gt;
+  &lt;dispatcher&gt;REQUEST&lt;/dispatcher&gt;
+&lt;/filter-mapping&gt;
+</code></pre>
+
+<p><strong>5. 日志和登录验证的filter示例</strong></p>
+
+<p>下面是login.html页面：</p>
+
+<pre><code class="html">&lt;!DOCTYPE html&gt;
+&lt;html&gt;
+&lt;head&gt;
+&lt;meta charset="US-ASCII"&gt;
+&lt;title&gt;Login Page&lt;/title&gt;
+&lt;/head&gt;
+&lt;body&gt;
+&lt;form action="LoginServlet" method="post"&gt;
+Username: &lt;input type="text" name="user"&gt;
+&lt;br&gt;
+Password: &lt;input type="password" name="pwd"&gt;
+&lt;br&gt;
+&lt;input type="submit" value="Login"&gt;
+&lt;/form&gt;
+&lt;/body&gt;
+&lt;/html&gt;
+</code></pre>
+
+<p>LoginServlet负责验证客户端是否已经登录：
+<figure class='code'><figcaption><span>LoginServlet.java</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+<span class='line-number'>34</span>
+<span class='line-number'>35</span>
+<span class='line-number'>36</span>
+<span class='line-number'>37</span>
+<span class='line-number'>38</span>
+<span class='line-number'>39</span>
+<span class='line-number'>40</span>
+<span class='line-number'>41</span>
+<span class='line-number'>42</span>
+<span class='line-number'>43</span>
+<span class='line-number'>44</span>
+<span class='line-number'>45</span>
+<span class='line-number'>46</span>
+<span class='line-number'>47</span>
+<span class='line-number'>48</span>
+<span class='line-number'>49</span>
+<span class='line-number'>50</span>
+<span class='line-number'>51</span>
+<span class='line-number'>52</span>
+<span class='line-number'>53</span>
+<span class='line-number'>54</span>
+<span class='line-number'>55</span>
+<span class='line-number'>56</span>
+<span class='line-number'>57</span>
+<span class='line-number'>58</span>
+<span class='line-number'>59</span>
+<span class='line-number'>60</span>
+<span class='line-number'>61</span>
+<span class='line-number'>62</span>
+<span class='line-number'>63</span>
+<span class='line-number'>64</span>
+<span class='line-number'>65</span>
+<span class='line-number'>66</span>
+<span class='line-number'>67</span>
+<span class='line-number'>68</span>
+<span class='line-number'>69</span>
+<span class='line-number'>70</span>
+<span class='line-number'>71</span>
+<span class='line-number'>72</span>
+<span class='line-number'>73</span>
+<span class='line-number'>74</span>
+<span class='line-number'>75</span>
+<span class='line-number'>76</span>
+<span class='line-number'>77</span>
+<span class='line-number'>78</span>
+<span class='line-number'>79</span>
+<span class='line-number'>80</span>
+<span class='line-number'>81</span>
+<span class='line-number'>82</span>
+<span class='line-number'>83</span>
+<span class='line-number'>84</span>
+<span class='line-number'>85</span>
+<span class='line-number'>86</span>
+<span class='line-number'>87</span>
+<span class='line-number'>88</span>
+<span class='line-number'>89</span>
+<span class='line-number'>90</span>
+<span class='line-number'>91</span>
+<span class='line-number'>92</span>
+<span class='line-number'>93</span>
+<span class='line-number'>94</span>
+<span class='line-number'>95</span>
+<span class='line-number'>96</span>
+<span class='line-number'>97</span>
+<span class='line-number'>98</span>
+<span class='line-number'>99</span>
+<span class='line-number'>100</span>
+<span class='line-number'>101</span>
+<span class='line-number'>102</span>
+<span class='line-number'>103</span>
+<span class='line-number'>104</span>
+<span class='line-number'>105</span>
+<span class='line-number'>106</span>
+<span class='line-number'>107</span>
+<span class='line-number'>108</span>
+<span class='line-number'>109</span>
+<span class='line-number'>110</span>
+<span class='line-number'>111</span>
+<span class='line-number'>112</span>
+<span class='line-number'>113</span>
+<span class='line-number'>114</span>
+<span class='line-number'>115</span>
+<span class='line-number'>116</span>
+<span class='line-number'>117</span>
+<span class='line-number'>118</span>
+<span class='line-number'>119</span>
+<span class='line-number'>120</span>
+<span class='line-number'>121</span>
+<span class='line-number'>122</span>
+<span class='line-number'>123</span>
+<span class='line-number'>124</span>
+<span class='line-number'>125</span>
+<span class='line-number'>126</span>
+<span class='line-number'>127</span>
+<span class='line-number'>128</span>
+<span class='line-number'>129</span>
+<span class='line-number'>130</span>
+<span class='line-number'>131</span>
+<span class='line-number'>132</span>
+<span class='line-number'>133</span>
+<span class='line-number'>134</span>
+<span class='line-number'>135</span>
+<span class='line-number'>136</span>
+<span class='line-number'>137</span>
+<span class='line-number'>138</span>
+<span class='line-number'>139</span>
+<span class='line-number'>140</span>
+<span class='line-number'>141</span>
+<span class='line-number'>142</span>
+<span class='line-number'>143</span>
+<span class='line-number'>144</span>
+<span class='line-number'>145</span>
+<span class='line-number'>146</span>
+<span class='line-number'>147</span>
+<span class='line-number'>148</span>
+<span class='line-number'>149</span>
+<span class='line-number'>150</span>
+<span class='line-number'>151</span>
+<span class='line-number'>152</span>
+<span class='line-number'>153</span>
+<span class='line-number'>154</span>
+<span class='line-number'>155</span>
+<span class='line-number'>156</span>
+<span class='line-number'>157</span>
+<span class='line-number'>158</span>
+<span class='line-number'>159</span>
+<span class='line-number'>160</span>
+<span class='line-number'>161</span>
+<span class='line-number'>162</span>
+<span class='line-number'>163</span>
+<span class='line-number'>164</span>
+<span class='line-number'>165</span>
+<span class='line-number'>166</span>
+<span class='line-number'>167</span>
+<span class='line-number'>168</span>
+<span class='line-number'>169</span>
+<span class='line-number'>170</span>
+<span class='line-number'>171</span>
+<span class='line-number'>172</span>
+<span class='line-number'>173</span>
+<span class='line-number'>174</span>
+<span class='line-number'>175</span>
+<span class='line-number'>176</span>
+<span class='line-number'>177</span>
+<span class='line-number'>178</span>
+<span class='line-number'>179</span>
+<span class='line-number'>180</span>
+<span class='line-number'>181</span>
+<span class='line-number'>182</span>
+<span class='line-number'>183</span>
+<span class='line-number'>184</span>
+<span class='line-number'>185</span>
+<span class='line-number'>186</span>
+<span class='line-number'>187</span>
+<span class='line-number'>188</span>
+<span class='line-number'>189</span>
+<span class='line-number'>190</span>
+<span class='line-number'>191</span>
+<span class='line-number'>192</span>
+<span class='line-number'>193</span>
+<span class='line-number'>194</span>
+<span class='line-number'>195</span>
+<span class='line-number'>196</span>
+<span class='line-number'>197</span>
+<span class='line-number'>198</span>
+<span class='line-number'>199</span>
+<span class='line-number'>200</span>
+<span class='line-number'>201</span>
+<span class='line-number'>202</span>
+<span class='line-number'>203</span>
+<span class='line-number'>204</span>
+<span class='line-number'>205</span>
+<span class='line-number'>206</span>
+<span class='line-number'>207</span>
+<span class='line-number'>208</span>
+<span class='line-number'>209</span>
+<span class='line-number'>210</span>
+<span class='line-number'>211</span>
+<span class='line-number'>212</span>
+<span class='line-number'>213</span>
+<span class='line-number'>214</span>
+<span class='line-number'>215</span>
+<span class='line-number'>216</span>
+<span class='line-number'>217</span>
+<span class='line-number'>218</span>
+<span class='line-number'>219</span>
+<span class='line-number'>220</span>
+<span class='line-number'>221</span>
+<span class='line-number'>222</span>
+<span class='line-number'>223</span>
+<span class='line-number'>224</span>
+<span class='line-number'>225</span>
+<span class='line-number'>226</span>
+<span class='line-number'>227</span>
+<span class='line-number'>228</span>
+<span class='line-number'>229</span>
+<span class='line-number'>230</span>
+<span class='line-number'>231</span>
+<span class='line-number'>232</span>
+<span class='line-number'>233</span>
+<span class='line-number'>234</span>
+<span class='line-number'>235</span>
+<span class='line-number'>236</span>
+<span class='line-number'>237</span>
+<span class='line-number'>238</span>
+<span class='line-number'>239</span>
+<span class='line-number'>240</span>
+<span class='line-number'>241</span>
+<span class='line-number'>242</span>
+<span class='line-number'>243</span>
+<span class='line-number'>244</span>
+<span class='line-number'>245</span>
+<span class='line-number'>246</span>
+<span class='line-number'>247</span>
+<span class='line-number'>248</span>
+<span class='line-number'>249</span>
+<span class='line-number'>250</span>
+<span class='line-number'>251</span>
+<span class='line-number'>252</span>
+<span class='line-number'>253</span>
+<span class='line-number'>254</span>
+<span class='line-number'>255</span>
+<span class='line-number'>256</span>
+<span class='line-number'>257</span>
+<span class='line-number'>258</span>
+<span class='line-number'>259</span>
+<span class='line-number'>260</span>
+<span class='line-number'>261</span>
+<span class='line-number'>262</span>
+<span class='line-number'>263</span>
+<span class='line-number'>264</span>
+<span class='line-number'>265</span>
+<span class='line-number'>266</span>
+<span class='line-number'>267</span>
+<span class='line-number'>268</span>
+<span class='line-number'>269</span>
+<span class='line-number'>270</span>
+<span class='line-number'>271</span>
+<span class='line-number'>272</span>
+<span class='line-number'>273</span>
+<span class='line-number'>274</span>
+<span class='line-number'>275</span>
+<span class='line-number'>276</span>
+<span class='line-number'>277</span>
+<span class='line-number'>278</span>
+<span class='line-number'>279</span>
+<span class='line-number'>280</span>
+<span class='line-number'>281</span>
+<span class='line-number'>282</span>
+<span class='line-number'>283</span>
+<span class='line-number'>284</span>
+<span class='line-number'>285</span>
+<span class='line-number'>286</span>
+<span class='line-number'>287</span>
+<span class='line-number'>288</span>
+<span class='line-number'>289</span>
+<span class='line-number'>290</span>
+<span class='line-number'>291</span>
+<span class='line-number'>292</span>
+<span class='line-number'>293</span>
+<span class='line-number'>294</span>
+<span class='line-number'>295</span>
+<span class='line-number'>296</span>
+<span class='line-number'>297</span>
+<span class='line-number'>298</span>
+<span class='line-number'>299</span>
+<span class='line-number'>300</span>
+<span class='line-number'>301</span>
+<span class='line-number'>302</span>
+<span class='line-number'>303</span>
+</pre></td><td class='code'><pre><code class='java'><span class='line'><span class="kn">package</span> <span class="n">com</span><span class="o">.</span><span class="na">journaldev</span><span class="o">.</span><span class="na">servlet</span><span class="o">.</span><span class="na">session</span><span class="o">;&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="kn">import</span> <span class="nn">java.io.IOException</span><span class="o">;</span>
+</span><span class='line'><span class="kn">import</span> <span class="nn">java.io.PrintWriter</span><span class="o">;&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="kn">import</span> <span class="nn">javax.servlet.RequestDispatcher</span><span class="o">;</span>
+</span><span class='line'><span class="kn">import</span> <span class="nn">javax.servlet.ServletException</span><span class="o">;</span>
+</span><span class='line'><span class="kn">import</span> <span class="nn">javax.servlet.annotation.WebServlet</span><span class="o">;</span>
+</span><span class='line'><span class="kn">import</span> <span class="nn">javax.servlet.http.Cookie</span><span class="o">;</span>
+</span><span class='line'><span class="kn">import</span> <span class="nn">javax.servlet.http.HttpServlet</span><span class="o">;</span>
+</span><span class='line'><span class="kn">import</span> <span class="nn">javax.servlet.http.HttpServletRequest</span><span class="o">;</span>
+</span><span class='line'><span class="kn">import</span> <span class="nn">javax.servlet.http.HttpServletResponse</span><span class="o">;</span>
+</span><span class='line'><span class="kn">import</span> <span class="nn">javax.servlet.http.HttpSession</span><span class="o">;&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;/&lt;</span><span class="n">em</span><span class="o">&gt;*</span>
+</span><span class='line'> <span class="o">*</span> <span class="n">Servlet</span> <span class="n">implementation</span> <span class="kd">class</span> <span class="nc">LoginServlet</span>
+</span><span class='line'> <span class="o">&lt;/</span><span class="n">em</span><span class="o">&gt;/</span>
+</span><span class='line'><span class="nd">@WebServlet</span><span class="o">(&amp;</span><span class="n">ldquo</span><span class="o">;/</span><span class="n">LoginServlet</span><span class="o">&amp;</span><span class="n">rdquo</span><span class="o">;)</span>
+</span><span class='line'><span class="kd">public</span> <span class="kd">class</span> <span class="nc">LoginServlet</span> <span class="kd">extends</span> <span class="n">HttpServlet</span> <span class="o">{</span>
+</span><span class='line'>    <span class="kd">private</span> <span class="kd">static</span> <span class="kd">final</span> <span class="kt">long</span> <span class="n">serialVersionUID</span> <span class="o">=</span> <span class="mi">1L</span><span class="o">;</span>
+</span><span class='line'>    <span class="kd">private</span> <span class="kd">final</span> <span class="n">String</span> <span class="n">userID</span> <span class="o">=</span> <span class="o">&amp;</span><span class="n">ldquo</span><span class="o">;</span><span class="n">admin</span><span class="o">&amp;</span><span class="n">rdquo</span><span class="o">;;</span>
+</span><span class='line'>    <span class="kd">private</span> <span class="kd">final</span> <span class="n">String</span> <span class="n">password</span> <span class="o">=</span> <span class="o">&amp;</span><span class="n">ldquo</span><span class="o">;</span><span class="n">password</span><span class="o">&amp;</span><span class="n">rdquo</span><span class="o">;;&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">pre</span><span class="o">&gt;&lt;</span><span class="n">code</span><span class="o">&gt;</span><span class="kd">protected</span> <span class="kt">void</span> <span class="nf">doPost</span><span class="o">(</span><span class="n">HttpServletRequest</span> <span class="n">request</span><span class="o">,</span>
+</span><span class='line'>        <span class="n">HttpServletResponse</span> <span class="n">response</span><span class="o">)</span> <span class="kd">throws</span> <span class="n">ServletException</span><span class="o">,</span> <span class="n">IOException</span> <span class="o">{</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="c1">// get request parameters for userID and password</span>
+</span><span class='line'>    <span class="n">String</span> <span class="n">user</span> <span class="o">=</span> <span class="n">request</span><span class="o">.</span><span class="na">getParameter</span><span class="o">(</span><span class="s">&quot;user&quot;</span><span class="o">);</span>
+</span><span class='line'>    <span class="n">String</span> <span class="n">pwd</span> <span class="o">=</span> <span class="n">request</span><span class="o">.</span><span class="na">getParameter</span><span class="o">(</span><span class="s">&quot;pwd&quot;</span><span class="o">);</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="k">if</span><span class="o">(</span><span class="n">userID</span><span class="o">.</span><span class="na">equals</span><span class="o">(</span><span class="n">user</span><span class="o">)</span> <span class="o">&amp;</span><span class="n">amp</span><span class="o">;&amp;</span><span class="n">amp</span><span class="o">;</span> <span class="n">password</span><span class="o">.</span><span class="na">equals</span><span class="o">(</span><span class="n">pwd</span><span class="o">)){</span>
+</span><span class='line'>        <span class="n">HttpSession</span> <span class="n">session</span> <span class="o">=</span> <span class="n">request</span><span class="o">.</span><span class="na">getSession</span><span class="o">();</span>
+</span><span class='line'>        <span class="n">session</span><span class="o">.</span><span class="na">setAttribute</span><span class="o">(</span><span class="s">&quot;user&quot;</span><span class="o">,</span> <span class="s">&quot;Pankaj&quot;</span><span class="o">);</span>
+</span><span class='line'>        <span class="c1">//setting session to expiry in 30 mins</span>
+</span><span class='line'>        <span class="n">session</span><span class="o">.</span><span class="na">setMaxInactiveInterval</span><span class="o">(</span><span class="mi">30</span><span class="o">*</span><span class="mi">60</span><span class="o">);</span>
+</span><span class='line'>        <span class="n">Cookie</span> <span class="n">userName</span> <span class="o">=</span> <span class="k">new</span> <span class="nf">Cookie</span><span class="o">(</span><span class="s">&quot;user&quot;</span><span class="o">,</span> <span class="n">user</span><span class="o">);</span>
+</span><span class='line'>        <span class="n">userName</span><span class="o">.</span><span class="na">setMaxAge</span><span class="o">(</span><span class="mi">30</span><span class="o">*</span><span class="mi">60</span><span class="o">);</span>
+</span><span class='line'>        <span class="n">response</span><span class="o">.</span><span class="na">addCookie</span><span class="o">(</span><span class="n">userName</span><span class="o">);</span>
+</span><span class='line'>        <span class="n">response</span><span class="o">.</span><span class="na">sendRedirect</span><span class="o">(</span><span class="s">&quot;LoginSuccess.jsp&quot;</span><span class="o">);</span>
+</span><span class='line'>    <span class="o">}</span><span class="k">else</span><span class="o">{</span>
+</span><span class='line'>        <span class="n">RequestDispatcher</span> <span class="n">rd</span> <span class="o">=</span> <span class="n">getServletContext</span><span class="o">().</span><span class="na">getRequestDispatcher</span><span class="o">(</span><span class="s">&quot;/login.html&quot;</span><span class="o">);</span>
+</span><span class='line'>        <span class="n">PrintWriter</span> <span class="n">out</span><span class="o">=</span> <span class="n">response</span><span class="o">.</span><span class="na">getWriter</span><span class="o">();</span>
+</span><span class='line'>        <span class="n">out</span><span class="o">.</span><span class="na">println</span><span class="o">(</span><span class="s">&quot;&amp;lt;font color=red&amp;gt;Either user name or password is wrong.&amp;lt;/font&amp;gt;&quot;</span><span class="o">);</span>
+</span><span class='line'>        <span class="n">rd</span><span class="o">.</span><span class="na">include</span><span class="o">(</span><span class="n">request</span><span class="o">,</span> <span class="n">response</span><span class="o">);</span>
+</span><span class='line'>    <span class="o">}</span>
+</span><span class='line'><span class="o">}</span>
+</span><span class='line'><span class="o">&lt;/</span><span class="n">code</span><span class="o">&gt;&lt;/</span><span class="n">pre</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;}</span>
+</span><span class='line'><span class="o">&lt;</span><span class="n">code</span><span class="o">&gt;</span>
+</span><span class='line'><span class="n">验证通过后跳转到LoginSuccess</span><span class="o">.</span><span class="na">jsp</span><span class="err">：</span>
+</span><span class='line'><span class="o">&lt;/</span><span class="n">code</span><span class="o">&gt;</span> <span class="n">jsp</span> <span class="n">LoginSuccess</span><span class="o">.</span><span class="na">jsp</span>
+</span><span class='line'><span class="o">&amp;</span><span class="n">lt</span><span class="o">;%</span><span class="err">@</span> <span class="n">page</span> <span class="n">language</span><span class="o">=&amp;</span><span class="n">ldquo</span><span class="o">;</span><span class="n">java</span><span class="o">&amp;</span><span class="n">rdquo</span><span class="o">;</span> <span class="n">contentType</span><span class="o">=&amp;</span><span class="n">ldquo</span><span class="o">;</span><span class="n">text</span><span class="o">/</span><span class="n">html</span><span class="o">;</span> <span class="n">charset</span><span class="o">=</span><span class="n">US</span><span class="o">-</span><span class="n">ASCII</span><span class="o">&amp;</span><span class="n">rdquo</span><span class="o">;</span>
+</span><span class='line'>    <span class="n">pageEncoding</span><span class="o">=&amp;</span><span class="n">ldquo</span><span class="o">;</span><span class="n">US</span><span class="o">-</span><span class="n">ASCII</span><span class="o">&amp;</span><span class="n">rdquo</span><span class="o">;%&gt;</span>
+</span><span class='line'><span class="o">&amp;</span><span class="n">lt</span><span class="o">;!</span><span class="n">DOCTYPE</span> <span class="n">html</span> <span class="n">PUBLIC</span> <span class="o">&amp;</span><span class="n">ldquo</span><span class="o">;-</span><span class="c1">//W3C//DTD HTML 4.01 Transitional//EN&amp;rdquo; &amp;ldquo;&lt;a href=&quot;http://www.w3.org/TR/html4/loose.dtd&quot;&gt;http://www.w3.org/TR/html4/loose.dtd&lt;/a&gt;&amp;rdquo;&gt;</span>
+</span><span class='line'><span class="o">&lt;</span><span class="n">html</span><span class="o">&gt;</span>
+</span><span class='line'><span class="o">&lt;</span><span class="n">head</span><span class="o">&gt;</span>
+</span><span class='line'><span class="o">&lt;</span><span class="n">meta</span> <span class="n">http</span><span class="o">-</span><span class="n">equiv</span><span class="o">=</span><span class="s">&quot;Content-Type&quot;</span> <span class="n">content</span><span class="o">=</span><span class="s">&quot;text/html; charset=US-ASCII&quot;</span><span class="o">&gt;</span>
+</span><span class='line'><span class="o">&lt;</span><span class="n">title</span><span class="o">&gt;</span><span class="n">Login</span> <span class="n">Success</span> <span class="n">Page</span><span class="o">&lt;/</span><span class="n">title</span><span class="o">&gt;</span>
+</span><span class='line'><span class="o">&lt;/</span><span class="n">head</span><span class="o">&gt;</span>
+</span><span class='line'><span class="o">&lt;</span><span class="n">body</span><span class="o">&gt;</span>
+</span><span class='line'><span class="o">&amp;</span><span class="n">lt</span><span class="o">;%</span>
+</span><span class='line'><span class="c1">//allow access only if session exists</span>
+</span><span class='line'><span class="n">String</span> <span class="n">user</span> <span class="o">=</span> <span class="o">(</span><span class="n">String</span><span class="o">)</span> <span class="n">session</span><span class="o">.</span><span class="na">getAttribute</span><span class="o">(&amp;</span><span class="n">ldquo</span><span class="o">;</span><span class="n">user</span><span class="o">&amp;</span><span class="n">rdquo</span><span class="o">;);</span>
+</span><span class='line'><span class="n">String</span> <span class="n">userName</span> <span class="o">=</span> <span class="kc">null</span><span class="o">;</span>
+</span><span class='line'><span class="n">String</span> <span class="n">sessionID</span> <span class="o">=</span> <span class="kc">null</span><span class="o">;</span>
+</span><span class='line'><span class="n">Cookie</span><span class="o">[]</span> <span class="n">cookies</span> <span class="o">=</span> <span class="n">request</span><span class="o">.</span><span class="na">getCookies</span><span class="o">();</span>
+</span><span class='line'><span class="k">if</span><span class="o">(</span><span class="n">cookies</span> <span class="o">!=</span><span class="kc">null</span><span class="o">){</span>
+</span><span class='line'><span class="k">for</span><span class="o">(</span><span class="n">Cookie</span> <span class="n">cookie</span> <span class="o">:</span> <span class="n">cookies</span><span class="o">){</span>
+</span><span class='line'>    <span class="k">if</span><span class="o">(</span><span class="n">cookie</span><span class="o">.</span><span class="na">getName</span><span class="o">().</span><span class="na">equals</span><span class="o">(&amp;</span><span class="n">ldquo</span><span class="o">;</span><span class="n">user</span><span class="o">&amp;</span><span class="n">rdquo</span><span class="o">;))</span> <span class="n">userName</span> <span class="o">=</span> <span class="n">cookie</span><span class="o">.</span><span class="na">getValue</span><span class="o">();</span>
+</span><span class='line'>    <span class="k">if</span><span class="o">(</span><span class="n">cookie</span><span class="o">.</span><span class="na">getName</span><span class="o">().</span><span class="na">equals</span><span class="o">(&amp;</span><span class="n">ldquo</span><span class="o">;</span><span class="n">JSESSIONID</span><span class="o">&amp;</span><span class="n">rdquo</span><span class="o">;))</span> <span class="n">sessionID</span> <span class="o">=</span> <span class="n">cookie</span><span class="o">.</span><span class="na">getValue</span><span class="o">();</span>
+</span><span class='line'><span class="o">}</span>
+</span><span class='line'><span class="o">}</span>
+</span><span class='line'><span class="o">%&gt;&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">h3</span><span class="o">&gt;</span><span class="n">Hi</span> <span class="o">&lt;%=</span><span class="n">userName</span> <span class="o">%&gt;,</span> <span class="n">Login</span> <span class="n">successful</span><span class="o">.</span> <span class="n">Your</span> <span class="n">Session</span> <span class="n">ID</span><span class="o">=&lt;%=</span><span class="n">sessionID</span> <span class="o">%&gt;&lt;/</span><span class="n">h3</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;&lt;</span><span class="n">br</span><span class="o">&gt;</span>
+</span><span class='line'><span class="n">User</span><span class="o">=&amp;</span><span class="n">lt</span><span class="o">;%=</span><span class="n">user</span> <span class="o">%&gt;</span>
+</span><span class='line'><span class="o">&lt;</span><span class="n">br</span><span class="o">&gt;</span>
+</span><span class='line'><span class="o">&lt;</span><span class="n">a</span> <span class="n">href</span><span class="o">=</span><span class="s">&quot;CheckoutPage.jsp&quot;</span><span class="o">&gt;</span><span class="n">Checkout</span> <span class="n">Page</span><span class="o">&lt;/</span><span class="n">a</span><span class="o">&gt;</span>
+</span><span class='line'><span class="o">&lt;</span><span class="n">form</span> <span class="n">action</span><span class="o">=</span><span class="s">&quot;LogoutServlet&quot;</span> <span class="n">method</span><span class="o">=</span><span class="s">&quot;post&quot;</span><span class="o">&gt;</span>
+</span><span class='line'><span class="o">&lt;</span><span class="n">input</span> <span class="n">type</span><span class="o">=</span><span class="s">&quot;submit&quot;</span> <span class="n">value</span><span class="o">=</span><span class="s">&quot;Logout&quot;</span> <span class="o">&gt;</span>
+</span><span class='line'><span class="o">&lt;/</span><span class="n">form</span><span class="o">&gt;</span>
+</span><span class='line'><span class="o">&lt;/</span><span class="n">body</span><span class="o">&gt;</span>
+</span><span class='line'><span class="o">&lt;/</span><span class="n">html</span><span class="o">&gt;</span>
+</span><span class='line'><span class="o">&lt;</span><span class="n">code</span><span class="o">&gt;</span>
+</span><span class='line'><span class="n">退出时我们并不需要进行验证</span><span class="err">，</span><span class="n">退出页面为</span><span class="err">：</span>
+</span><span class='line'><span class="o">&lt;/</span><span class="n">code</span><span class="o">&gt;</span> <span class="n">jsp</span> <span class="n">CheckoutPage</span><span class="o">.</span><span class="na">jsp</span>
+</span><span class='line'><span class="o">&amp;</span><span class="n">lt</span><span class="o">;%</span><span class="err">@</span> <span class="n">page</span> <span class="n">language</span><span class="o">=&amp;</span><span class="n">ldquo</span><span class="o">;</span><span class="n">java</span><span class="o">&amp;</span><span class="n">rdquo</span><span class="o">;</span> <span class="n">contentType</span><span class="o">=&amp;</span><span class="n">ldquo</span><span class="o">;</span><span class="n">text</span><span class="o">/</span><span class="n">html</span><span class="o">;</span> <span class="n">charset</span><span class="o">=</span><span class="n">US</span><span class="o">-</span><span class="n">ASCII</span><span class="o">&amp;</span><span class="n">rdquo</span><span class="o">;</span>
+</span><span class='line'>    <span class="n">pageEncoding</span><span class="o">=&amp;</span><span class="n">ldquo</span><span class="o">;</span><span class="n">US</span><span class="o">-</span><span class="n">ASCII</span><span class="o">&amp;</span><span class="n">rdquo</span><span class="o">;%&gt;</span>
+</span><span class='line'><span class="o">&amp;</span><span class="n">lt</span><span class="o">;!</span><span class="n">DOCTYPE</span> <span class="n">html</span> <span class="n">PUBLIC</span> <span class="o">&amp;</span><span class="n">ldquo</span><span class="o">;-</span><span class="c1">//W3C//DTD HTML 4.01 Transitional//EN&amp;rdquo; &amp;ldquo;&lt;a href=&quot;http://www.w3.org/TR/html4/loose.dtd&quot;&gt;http://www.w3.org/TR/html4/loose.dtd&lt;/a&gt;&amp;rdquo;&gt;</span>
+</span><span class='line'><span class="o">&lt;</span><span class="n">html</span><span class="o">&gt;</span>
+</span><span class='line'><span class="o">&lt;</span><span class="n">head</span><span class="o">&gt;</span>
+</span><span class='line'><span class="o">&lt;</span><span class="n">meta</span> <span class="n">http</span><span class="o">-</span><span class="n">equiv</span><span class="o">=</span><span class="s">&quot;Content-Type&quot;</span> <span class="n">content</span><span class="o">=</span><span class="s">&quot;text/html; charset=US-ASCII&quot;</span><span class="o">&gt;</span>
+</span><span class='line'><span class="o">&lt;</span><span class="n">title</span><span class="o">&gt;</span><span class="n">Login</span> <span class="n">Success</span> <span class="n">Page</span><span class="o">&lt;/</span><span class="n">title</span><span class="o">&gt;</span>
+</span><span class='line'><span class="o">&lt;/</span><span class="n">head</span><span class="o">&gt;</span>
+</span><span class='line'><span class="o">&lt;</span><span class="n">body</span><span class="o">&gt;</span>
+</span><span class='line'><span class="o">&amp;</span><span class="n">lt</span><span class="o">;%</span>
+</span><span class='line'><span class="n">String</span> <span class="n">userName</span> <span class="o">=</span> <span class="kc">null</span><span class="o">;</span>
+</span><span class='line'><span class="n">String</span> <span class="n">sessionID</span> <span class="o">=</span> <span class="kc">null</span><span class="o">;</span>
+</span><span class='line'><span class="n">Cookie</span><span class="o">[]</span> <span class="n">cookies</span> <span class="o">=</span> <span class="n">request</span><span class="o">.</span><span class="na">getCookies</span><span class="o">();</span>
+</span><span class='line'><span class="k">if</span><span class="o">(</span><span class="n">cookies</span> <span class="o">!=</span><span class="kc">null</span><span class="o">){</span>
+</span><span class='line'><span class="k">for</span><span class="o">(</span><span class="n">Cookie</span> <span class="n">cookie</span> <span class="o">:</span> <span class="n">cookies</span><span class="o">){</span>
+</span><span class='line'>    <span class="k">if</span><span class="o">(</span><span class="n">cookie</span><span class="o">.</span><span class="na">getName</span><span class="o">().</span><span class="na">equals</span><span class="o">(&amp;</span><span class="n">ldquo</span><span class="o">;</span><span class="n">user</span><span class="o">&amp;</span><span class="n">rdquo</span><span class="o">;))</span> <span class="n">userName</span> <span class="o">=</span> <span class="n">cookie</span><span class="o">.</span><span class="na">getValue</span><span class="o">();</span>
+</span><span class='line'><span class="o">}</span>
+</span><span class='line'><span class="o">}</span>
+</span><span class='line'><span class="o">%&gt;&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">h3</span><span class="o">&gt;</span><span class="n">Hi</span> <span class="o">&lt;%=</span><span class="n">userName</span> <span class="o">%&gt;,</span> <span class="k">do</span> <span class="n">the</span> <span class="n">checkout</span><span class="o">.&lt;/</span><span class="n">h3</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;&lt;</span><span class="n">br</span><span class="o">&gt;</span>
+</span><span class='line'><span class="o">&lt;</span><span class="n">form</span> <span class="n">action</span><span class="o">=</span><span class="s">&quot;LogoutServlet&quot;</span> <span class="n">method</span><span class="o">=</span><span class="s">&quot;post&quot;</span><span class="o">&gt;</span>
+</span><span class='line'><span class="o">&lt;</span><span class="n">input</span> <span class="n">type</span><span class="o">=</span><span class="s">&quot;submit&quot;</span> <span class="n">value</span><span class="o">=</span><span class="s">&quot;Logout&quot;</span> <span class="o">&gt;</span>
+</span><span class='line'><span class="o">&lt;/</span><span class="n">form</span><span class="o">&gt;</span>
+</span><span class='line'><span class="o">&lt;/</span><span class="n">body</span><span class="o">&gt;</span>
+</span><span class='line'><span class="o">&lt;/</span><span class="n">html</span><span class="o">&gt;</span>
+</span><span class='line'><span class="o">&lt;</span><span class="n">code</span><span class="o">&gt;</span>
+</span><span class='line'><span class="n">LogoutServlet在用户点击退出按钮时执行</span><span class="err">：</span>
+</span><span class='line'><span class="o">&lt;/</span><span class="n">code</span><span class="o">&gt;</span> <span class="n">java</span> <span class="n">LogoutServlet</span><span class="o">.</span><span class="na">java</span>
+</span><span class='line'><span class="kn">package</span> <span class="n">com</span><span class="o">.</span><span class="na">journaldev</span><span class="o">.</span><span class="na">servlet</span><span class="o">.</span><span class="na">session</span><span class="o">;&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="kn">import</span> <span class="nn">java.io.IOException</span><span class="o">;&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="kn">import</span> <span class="nn">javax.servlet.ServletException</span><span class="o">;</span>
+</span><span class='line'><span class="kn">import</span> <span class="nn">javax.servlet.annotation.WebServlet</span><span class="o">;</span>
+</span><span class='line'><span class="kn">import</span> <span class="nn">javax.servlet.http.Cookie</span><span class="o">;</span>
+</span><span class='line'><span class="kn">import</span> <span class="nn">javax.servlet.http.HttpServlet</span><span class="o">;</span>
+</span><span class='line'><span class="kn">import</span> <span class="nn">javax.servlet.http.HttpServletRequest</span><span class="o">;</span>
+</span><span class='line'><span class="kn">import</span> <span class="nn">javax.servlet.http.HttpServletResponse</span><span class="o">;</span>
+</span><span class='line'><span class="kn">import</span> <span class="nn">javax.servlet.http.HttpSession</span><span class="o">;&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;/&lt;</span><span class="n">em</span><span class="o">&gt;*</span>
+</span><span class='line'> <span class="o">*</span> <span class="n">Servlet</span> <span class="n">implementation</span> <span class="kd">class</span> <span class="nc">LogoutServlet</span>
+</span><span class='line'> <span class="o">&lt;/</span><span class="n">em</span><span class="o">&gt;/</span>
+</span><span class='line'><span class="nd">@WebServlet</span><span class="o">(&amp;</span><span class="n">ldquo</span><span class="o">;/</span><span class="n">LogoutServlet</span><span class="o">&amp;</span><span class="n">rdquo</span><span class="o">;)</span>
+</span><span class='line'><span class="kd">public</span> <span class="kd">class</span> <span class="nc">LogoutServlet</span> <span class="kd">extends</span> <span class="n">HttpServlet</span> <span class="o">{</span>
+</span><span class='line'>    <span class="kd">private</span> <span class="kd">static</span> <span class="kd">final</span> <span class="kt">long</span> <span class="n">serialVersionUID</span> <span class="o">=</span> <span class="mi">1L</span><span class="o">;&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">pre</span><span class="o">&gt;&lt;</span><span class="n">code</span><span class="o">&gt;</span><span class="kd">protected</span> <span class="kt">void</span> <span class="nf">doPost</span><span class="o">(</span><span class="n">HttpServletRequest</span> <span class="n">request</span><span class="o">,</span> <span class="n">HttpServletResponse</span> <span class="n">response</span><span class="o">)</span> <span class="kd">throws</span> <span class="n">ServletException</span><span class="o">,</span> <span class="n">IOException</span> <span class="o">{</span>
+</span><span class='line'>    <span class="n">response</span><span class="o">.</span><span class="na">setContentType</span><span class="o">(</span><span class="s">&quot;text/html&quot;</span><span class="o">);</span>
+</span><span class='line'>    <span class="n">Cookie</span><span class="o">[]</span> <span class="n">cookies</span> <span class="o">=</span> <span class="n">request</span><span class="o">.</span><span class="na">getCookies</span><span class="o">();</span>
+</span><span class='line'>    <span class="k">if</span><span class="o">(</span><span class="n">cookies</span> <span class="o">!=</span> <span class="kc">null</span><span class="o">){</span>
+</span><span class='line'>    <span class="k">for</span><span class="o">(</span><span class="n">Cookie</span> <span class="n">cookie</span> <span class="o">:</span> <span class="n">cookies</span><span class="o">){</span>
+</span><span class='line'>        <span class="k">if</span><span class="o">(</span><span class="n">cookie</span><span class="o">.</span><span class="na">getName</span><span class="o">().</span><span class="na">equals</span><span class="o">(</span><span class="s">&quot;JSESSIONID&quot;</span><span class="o">)){</span>
+</span><span class='line'>            <span class="n">System</span><span class="o">.</span><span class="na">out</span><span class="o">.</span><span class="na">println</span><span class="o">(</span><span class="s">&quot;JSESSIONID=&quot;</span><span class="o">+</span><span class="n">cookie</span><span class="o">.</span><span class="na">getValue</span><span class="o">());</span>
+</span><span class='line'>            <span class="k">break</span><span class="o">;</span>
+</span><span class='line'>        <span class="o">}</span>
+</span><span class='line'>    <span class="o">}</span>
+</span><span class='line'>    <span class="o">}</span>
+</span><span class='line'>    <span class="c1">//invalidate the session if exists</span>
+</span><span class='line'>    <span class="n">HttpSession</span> <span class="n">session</span> <span class="o">=</span> <span class="n">request</span><span class="o">.</span><span class="na">getSession</span><span class="o">(</span><span class="kc">false</span><span class="o">);</span>
+</span><span class='line'>    <span class="n">System</span><span class="o">.</span><span class="na">out</span><span class="o">.</span><span class="na">println</span><span class="o">(</span><span class="s">&quot;User=&quot;</span><span class="o">+</span><span class="n">session</span><span class="o">.</span><span class="na">getAttribute</span><span class="o">(</span><span class="s">&quot;user&quot;</span><span class="o">));</span>
+</span><span class='line'>    <span class="k">if</span><span class="o">(</span><span class="n">session</span> <span class="o">!=</span> <span class="kc">null</span><span class="o">){</span>
+</span><span class='line'>        <span class="n">session</span><span class="o">.</span><span class="na">invalidate</span><span class="o">();</span>
+</span><span class='line'>    <span class="o">}</span>
+</span><span class='line'>    <span class="n">response</span><span class="o">.</span><span class="na">sendRedirect</span><span class="o">(</span><span class="s">&quot;login.html&quot;</span><span class="o">);</span>
+</span><span class='line'><span class="o">}</span>
+</span><span class='line'><span class="o">&lt;/</span><span class="n">code</span><span class="o">&gt;&lt;/</span><span class="n">pre</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;}</span>
+</span><span class='line'><span class="o">&lt;</span><span class="n">code</span><span class="o">&gt;</span>
+</span><span class='line'><span class="n">现在我们来创建日志和登录认证的两个filter</span><span class="err">：</span>
+</span><span class='line'><span class="o">&lt;/</span><span class="n">code</span><span class="o">&gt;</span> <span class="n">java</span> <span class="n">RequestLoggingFilter</span><span class="o">.</span><span class="na">java</span>
+</span><span class='line'><span class="kn">package</span> <span class="n">com</span><span class="o">.</span><span class="na">journaldev</span><span class="o">.</span><span class="na">servlet</span><span class="o">.</span><span class="na">filters</span><span class="o">;&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="kn">import</span> <span class="nn">java.io.IOException</span><span class="o">;</span>
+</span><span class='line'><span class="kn">import</span> <span class="nn">java.util.Enumeration</span><span class="o">;&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="kn">import</span> <span class="nn">javax.servlet.Filter</span><span class="o">;</span>
+</span><span class='line'><span class="kn">import</span> <span class="nn">javax.servlet.FilterChain</span><span class="o">;</span>
+</span><span class='line'><span class="kn">import</span> <span class="nn">javax.servlet.FilterConfig</span><span class="o">;</span>
+</span><span class='line'><span class="kn">import</span> <span class="nn">javax.servlet.ServletContext</span><span class="o">;</span>
+</span><span class='line'><span class="kn">import</span> <span class="nn">javax.servlet.ServletException</span><span class="o">;</span>
+</span><span class='line'><span class="kn">import</span> <span class="nn">javax.servlet.ServletRequest</span><span class="o">;</span>
+</span><span class='line'><span class="kn">import</span> <span class="nn">javax.servlet.ServletResponse</span><span class="o">;</span>
+</span><span class='line'><span class="kn">import</span> <span class="nn">javax.servlet.annotation.WebFilter</span><span class="o">;</span>
+</span><span class='line'><span class="kn">import</span> <span class="nn">javax.servlet.http.Cookie</span><span class="o">;</span>
+</span><span class='line'><span class="kn">import</span> <span class="nn">javax.servlet.http.HttpServletRequest</span><span class="o">;&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;/&lt;</span><span class="n">em</span><span class="o">&gt;*</span>
+</span><span class='line'> <span class="o">*</span> <span class="n">Servlet</span> <span class="n">Filter</span> <span class="n">implementation</span> <span class="kd">class</span> <span class="nc">RequestLoggingFilter</span>
+</span><span class='line'> <span class="o">&lt;/</span><span class="n">em</span><span class="o">&gt;/</span>
+</span><span class='line'><span class="nd">@WebFilter</span><span class="o">(&amp;</span><span class="n">ldquo</span><span class="o">;/</span><span class="n">RequestLoggingFilter</span><span class="o">&amp;</span><span class="n">rdquo</span><span class="o">;)</span>
+</span><span class='line'><span class="kd">public</span> <span class="kd">class</span> <span class="nc">RequestLoggingFilter</span> <span class="kd">implements</span> <span class="n">Filter</span> <span class="o">{&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">pre</span><span class="o">&gt;&lt;</span><span class="n">code</span><span class="o">&gt;</span><span class="kd">private</span> <span class="n">ServletContext</span> <span class="n">context</span><span class="o">;</span>
+</span><span class='line'>
+</span><span class='line'><span class="kd">public</span> <span class="kt">void</span> <span class="nf">init</span><span class="o">(</span><span class="n">FilterConfig</span> <span class="n">fConfig</span><span class="o">)</span> <span class="kd">throws</span> <span class="n">ServletException</span> <span class="o">{</span>
+</span><span class='line'>    <span class="k">this</span><span class="o">.</span><span class="na">context</span> <span class="o">=</span> <span class="n">fConfig</span><span class="o">.</span><span class="na">getServletContext</span><span class="o">();</span>
+</span><span class='line'>    <span class="k">this</span><span class="o">.</span><span class="na">context</span><span class="o">.</span><span class="na">log</span><span class="o">(</span><span class="s">&quot;RequestLoggingFilter initialized&quot;</span><span class="o">);</span>
+</span><span class='line'><span class="o">}</span>
+</span><span class='line'>
+</span><span class='line'><span class="kd">public</span> <span class="kt">void</span> <span class="nf">doFilter</span><span class="o">(</span><span class="n">ServletRequest</span> <span class="n">request</span><span class="o">,</span> <span class="n">ServletResponse</span> <span class="n">response</span><span class="o">,</span> <span class="n">FilterChain</span> <span class="n">chain</span><span class="o">)</span> <span class="kd">throws</span> <span class="n">IOException</span><span class="o">,</span> <span class="n">ServletException</span> <span class="o">{</span>
+</span><span class='line'>    <span class="n">HttpServletRequest</span> <span class="n">req</span> <span class="o">=</span> <span class="o">(</span><span class="n">HttpServletRequest</span><span class="o">)</span> <span class="n">request</span><span class="o">;</span>
+</span><span class='line'>    <span class="n">Enumeration</span><span class="o">&amp;</span><span class="n">lt</span><span class="o">;</span><span class="n">String</span><span class="o">&amp;</span><span class="n">gt</span><span class="o">;</span> <span class="n">params</span> <span class="o">=</span> <span class="n">req</span><span class="o">.</span><span class="na">getParameterNames</span><span class="o">();</span>
+</span><span class='line'>    <span class="k">while</span><span class="o">(</span><span class="n">params</span><span class="o">.</span><span class="na">hasMoreElements</span><span class="o">()){</span>
+</span><span class='line'>        <span class="n">String</span> <span class="n">name</span> <span class="o">=</span> <span class="n">params</span><span class="o">.</span><span class="na">nextElement</span><span class="o">();</span>
+</span><span class='line'>        <span class="n">String</span> <span class="n">value</span> <span class="o">=</span> <span class="n">request</span><span class="o">.</span><span class="na">getParameter</span><span class="o">(</span><span class="n">name</span><span class="o">);</span>
+</span><span class='line'>        <span class="k">this</span><span class="o">.</span><span class="na">context</span><span class="o">.</span><span class="na">log</span><span class="o">(</span><span class="n">req</span><span class="o">.</span><span class="na">getRemoteAddr</span><span class="o">()</span> <span class="o">+</span> <span class="s">&quot;::Request Params::{&quot;</span><span class="o">+</span><span class="n">name</span><span class="o">+</span><span class="s">&quot;=&quot;</span><span class="o">+</span><span class="n">value</span><span class="o">+</span><span class="s">&quot;}&quot;</span><span class="o">);</span>
+</span><span class='line'>    <span class="o">}</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="n">Cookie</span><span class="o">[]</span> <span class="n">cookies</span> <span class="o">=</span> <span class="n">req</span><span class="o">.</span><span class="na">getCookies</span><span class="o">();</span>
+</span><span class='line'>    <span class="k">if</span><span class="o">(</span><span class="n">cookies</span> <span class="o">!=</span> <span class="kc">null</span><span class="o">){</span>
+</span><span class='line'>        <span class="k">for</span><span class="o">(</span><span class="n">Cookie</span> <span class="n">cookie</span> <span class="o">:</span> <span class="n">cookies</span><span class="o">){</span>
+</span><span class='line'>            <span class="k">this</span><span class="o">.</span><span class="na">context</span><span class="o">.</span><span class="na">log</span><span class="o">(</span><span class="n">req</span><span class="o">.</span><span class="na">getRemoteAddr</span><span class="o">()</span> <span class="o">+</span> <span class="s">&quot;::Cookie::{&quot;</span><span class="o">+</span><span class="n">cookie</span><span class="o">.</span><span class="na">getName</span><span class="o">()+</span><span class="s">&quot;,&quot;</span><span class="o">+</span><span class="n">cookie</span><span class="o">.</span><span class="na">getValue</span><span class="o">()+</span><span class="s">&quot;}&quot;</span><span class="o">);</span>
+</span><span class='line'>        <span class="o">}</span>
+</span><span class='line'>    <span class="o">}</span>
+</span><span class='line'>    <span class="c1">// pass the request along the filter chain</span>
+</span><span class='line'>    <span class="n">chain</span><span class="o">.</span><span class="na">doFilter</span><span class="o">(</span><span class="n">request</span><span class="o">,</span> <span class="n">response</span><span class="o">);</span>
+</span><span class='line'><span class="o">}</span>
+</span><span class='line'>
+</span><span class='line'><span class="kd">public</span> <span class="kt">void</span> <span class="nf">destroy</span><span class="o">()</span> <span class="o">{</span>
+</span><span class='line'>    <span class="c1">//we can close resources here</span>
+</span><span class='line'><span class="o">}</span>
+</span><span class='line'><span class="o">&lt;/</span><span class="n">code</span><span class="o">&gt;&lt;/</span><span class="n">pre</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;}</span>
+</span><span class='line'><span class="o">&lt;</span><span class="n">code</span><span class="o">&gt;</span>
+</span><span class='line'><span class="n">然后是另一个Filter</span><span class="err">：</span>
+</span><span class='line'><span class="o">&lt;/</span><span class="n">code</span><span class="o">&gt;</span> <span class="n">java</span> <span class="n">AuthenticationFilter</span><span class="o">.</span><span class="na">java</span>
+</span><span class='line'><span class="kn">package</span> <span class="n">com</span><span class="o">.</span><span class="na">journaldev</span><span class="o">.</span><span class="na">servlet</span><span class="o">.</span><span class="na">filters</span><span class="o">;&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="kn">import</span> <span class="nn">java.io.IOException</span><span class="o">;&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="kn">import</span> <span class="nn">javax.servlet.Filter</span><span class="o">;</span>
+</span><span class='line'><span class="kn">import</span> <span class="nn">javax.servlet.FilterChain</span><span class="o">;</span>
+</span><span class='line'><span class="kn">import</span> <span class="nn">javax.servlet.FilterConfig</span><span class="o">;</span>
+</span><span class='line'><span class="kn">import</span> <span class="nn">javax.servlet.ServletContext</span><span class="o">;</span>
+</span><span class='line'><span class="kn">import</span> <span class="nn">javax.servlet.ServletException</span><span class="o">;</span>
+</span><span class='line'><span class="kn">import</span> <span class="nn">javax.servlet.ServletRequest</span><span class="o">;</span>
+</span><span class='line'><span class="kn">import</span> <span class="nn">javax.servlet.ServletResponse</span><span class="o">;</span>
+</span><span class='line'><span class="kn">import</span> <span class="nn">javax.servlet.annotation.WebFilter</span><span class="o">;</span>
+</span><span class='line'><span class="kn">import</span> <span class="nn">javax.servlet.http.HttpServletRequest</span><span class="o">;</span>
+</span><span class='line'><span class="kn">import</span> <span class="nn">javax.servlet.http.HttpServletResponse</span><span class="o">;</span>
+</span><span class='line'><span class="kn">import</span> <span class="nn">javax.servlet.http.HttpSession</span><span class="o">;&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="nd">@WebFilter</span><span class="o">(&amp;</span><span class="n">ldquo</span><span class="o">;/</span><span class="n">AuthenticationFilter</span><span class="o">&amp;</span><span class="n">rdquo</span><span class="o">;)</span>
+</span><span class='line'><span class="kd">public</span> <span class="kd">class</span> <span class="nc">AuthenticationFilter</span> <span class="kd">implements</span> <span class="n">Filter</span> <span class="o">{&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">pre</span><span class="o">&gt;&lt;</span><span class="n">code</span><span class="o">&gt;</span><span class="kd">private</span> <span class="n">ServletContext</span> <span class="n">context</span><span class="o">;</span>
+</span><span class='line'>
+</span><span class='line'><span class="kd">public</span> <span class="kt">void</span> <span class="nf">init</span><span class="o">(</span><span class="n">FilterConfig</span> <span class="n">fConfig</span><span class="o">)</span> <span class="kd">throws</span> <span class="n">ServletException</span> <span class="o">{</span>
+</span><span class='line'>    <span class="k">this</span><span class="o">.</span><span class="na">context</span> <span class="o">=</span> <span class="n">fConfig</span><span class="o">.</span><span class="na">getServletContext</span><span class="o">();</span>
+</span><span class='line'>    <span class="k">this</span><span class="o">.</span><span class="na">context</span><span class="o">.</span><span class="na">log</span><span class="o">(</span><span class="s">&quot;AuthenticationFilter initialized&quot;</span><span class="o">);</span>
+</span><span class='line'><span class="o">}</span>
+</span><span class='line'>
+</span><span class='line'><span class="kd">public</span> <span class="kt">void</span> <span class="nf">doFilter</span><span class="o">(</span><span class="n">ServletRequest</span> <span class="n">request</span><span class="o">,</span> <span class="n">ServletResponse</span> <span class="n">response</span><span class="o">,</span> <span class="n">FilterChain</span> <span class="n">chain</span><span class="o">)</span> <span class="kd">throws</span> <span class="n">IOException</span><span class="o">,</span> <span class="n">ServletException</span> <span class="o">{</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="n">HttpServletRequest</span> <span class="n">req</span> <span class="o">=</span> <span class="o">(</span><span class="n">HttpServletRequest</span><span class="o">)</span> <span class="n">request</span><span class="o">;</span>
+</span><span class='line'>    <span class="n">HttpServletResponse</span> <span class="n">res</span> <span class="o">=</span> <span class="o">(</span><span class="n">HttpServletResponse</span><span class="o">)</span> <span class="n">response</span><span class="o">;</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="n">String</span> <span class="n">uri</span> <span class="o">=</span> <span class="n">req</span><span class="o">.</span><span class="na">getRequestURI</span><span class="o">();</span>
+</span><span class='line'>    <span class="k">this</span><span class="o">.</span><span class="na">context</span><span class="o">.</span><span class="na">log</span><span class="o">(</span><span class="s">&quot;Requested Resource::&quot;</span><span class="o">+</span><span class="n">uri</span><span class="o">);</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="n">HttpSession</span> <span class="n">session</span> <span class="o">=</span> <span class="n">req</span><span class="o">.</span><span class="na">getSession</span><span class="o">(</span><span class="kc">false</span><span class="o">);</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="k">if</span><span class="o">(</span><span class="n">session</span> <span class="o">==</span> <span class="kc">null</span> <span class="o">&amp;</span><span class="n">amp</span><span class="o">;&amp;</span><span class="n">amp</span><span class="o">;</span> <span class="o">!(</span><span class="n">uri</span><span class="o">.</span><span class="na">endsWith</span><span class="o">(</span><span class="s">&quot;html&quot;</span><span class="o">)</span> <span class="o">||</span> <span class="n">uri</span><span class="o">.</span><span class="na">endsWith</span><span class="o">(</span><span class="s">&quot;LoginServlet&quot;</span><span class="o">))){</span>
+</span><span class='line'>        <span class="k">this</span><span class="o">.</span><span class="na">context</span><span class="o">.</span><span class="na">log</span><span class="o">(</span><span class="s">&quot;Unauthorized access request&quot;</span><span class="o">);</span>
+</span><span class='line'>        <span class="n">res</span><span class="o">.</span><span class="na">sendRedirect</span><span class="o">(</span><span class="s">&quot;login.html&quot;</span><span class="o">);</span>
+</span><span class='line'>    <span class="o">}</span><span class="k">else</span><span class="o">{</span>
+</span><span class='line'>        <span class="c1">// pass the request along the filter chain</span>
+</span><span class='line'>        <span class="n">chain</span><span class="o">.</span><span class="na">doFilter</span><span class="o">(</span><span class="n">request</span><span class="o">,</span> <span class="n">response</span><span class="o">);</span>
+</span><span class='line'>    <span class="o">}</span>
+</span><span class='line'><span class="o">}</span>
+</span><span class='line'>
+</span><span class='line'><span class="kd">public</span> <span class="kt">void</span> <span class="nf">destroy</span><span class="o">()</span> <span class="o">{</span>
+</span><span class='line'>    <span class="c1">//close any resources here</span>
+</span><span class='line'><span class="o">}</span>
+</span><span class='line'><span class="o">&lt;/</span><span class="n">code</span><span class="o">&gt;&lt;/</span><span class="n">pre</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;}</span>
+</span><span class='line'><span class="o">&lt;</span><span class="n">code</span><span class="o">&gt;</span>
+</span><span class='line'><span class="n">注意我们并不会对任何静态html页面或LoginServlet进行验证</span><span class="err">，</span><span class="n">下面我们在web</span><span class="o">.</span><span class="na">xml文件中配置</span><span class="err">：</span>
+</span><span class='line'><span class="o">&lt;/</span><span class="n">code</span><span class="o">&gt;</span> <span class="n">xml</span>
+</span><span class='line'><span class="o">&amp;</span><span class="n">lt</span><span class="o">;?</span><span class="n">xml</span> <span class="n">version</span><span class="o">=&amp;</span><span class="n">ldquo</span><span class="o">;</span><span class="mf">1.0</span><span class="o">&amp;</span><span class="n">rdquo</span><span class="o">;</span> <span class="n">encoding</span><span class="o">=&amp;</span><span class="n">ldquo</span><span class="o">;</span><span class="n">UTF</span><span class="o">-</span><span class="mi">8</span><span class="o">&amp;</span><span class="n">rdquo</span><span class="o">;?&gt;</span>
+</span><span class='line'><span class="o">&lt;</span><span class="n">web</span><span class="o">-</span><span class="n">app</span> <span class="nl">xmlns:</span><span class="n">xsi</span><span class="o">=</span><span class="s">&quot;http://www.w3.org/2001/XMLSchema-instance&quot;</span> <span class="n">xmlns</span><span class="o">=</span><span class="s">&quot;http://java.sun.com/xml/ns/javaee&quot;</span> <span class="nl">xsi:</span><span class="n">schemaLocation</span><span class="o">=</span><span class="s">&quot;http://java.sun.com/xml/ns/javaee http://java.sun.com/xml/ns/javaee/web-app_3_0.xsd&quot;</span> <span class="n">version</span><span class="o">=</span><span class="s">&quot;3.0&quot;</span><span class="o">&gt;</span>
+</span><span class='line'>  <span class="o">&lt;</span><span class="n">display</span><span class="o">-</span><span class="n">name</span><span class="o">&gt;</span><span class="n">ServletFilterExample</span><span class="o">&lt;/</span><span class="n">display</span><span class="o">-</span><span class="n">name</span><span class="o">&gt;</span>
+</span><span class='line'>  <span class="o">&lt;</span><span class="n">welcome</span><span class="o">-</span><span class="n">file</span><span class="o">-</span><span class="n">list</span><span class="o">&gt;</span>
+</span><span class='line'>    <span class="o">&lt;</span><span class="n">welcome</span><span class="o">-</span><span class="n">file</span><span class="o">&gt;</span><span class="n">login</span><span class="o">.</span><span class="na">html</span><span class="o">&lt;/</span><span class="n">welcome</span><span class="o">-</span><span class="n">file</span><span class="o">&gt;</span>
+</span><span class='line'>  <span class="o">&lt;/</span><span class="n">welcome</span><span class="o">-</span><span class="n">file</span><span class="o">-</span><span class="n">list</span><span class="o">&gt;&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span>  <span class="o">&lt;</span><span class="n">filter</span><span class="o">&gt;</span>
+</span><span class='line'>    <span class="o">&lt;</span><span class="n">filter</span><span class="o">-</span><span class="n">name</span><span class="o">&gt;</span><span class="n">RequestLoggingFilter</span><span class="o">&lt;/</span><span class="n">filter</span><span class="o">-</span><span class="n">name</span><span class="o">&gt;</span>
+</span><span class='line'>    <span class="o">&lt;</span><span class="n">filter</span><span class="o">-</span><span class="n">class</span><span class="o">&gt;</span><span class="n">com</span><span class="o">.</span><span class="na">journaldev</span><span class="o">.</span><span class="na">servlet</span><span class="o">.</span><span class="na">filters</span><span class="o">.</span><span class="na">RequestLoggingFilter</span><span class="o">&lt;/</span><span class="n">filter</span><span class="o">-</span><span class="n">class</span><span class="o">&gt;</span>
+</span><span class='line'>  <span class="o">&lt;/</span><span class="n">filter</span><span class="o">&gt;</span>
+</span><span class='line'>  <span class="o">&lt;</span><span class="n">filter</span><span class="o">&gt;</span>
+</span><span class='line'>    <span class="o">&lt;</span><span class="n">filter</span><span class="o">-</span><span class="n">name</span><span class="o">&gt;</span><span class="n">AuthenticationFilter</span><span class="o">&lt;/</span><span class="n">filter</span><span class="o">-</span><span class="n">name</span><span class="o">&gt;</span>
+</span><span class='line'>    <span class="o">&lt;</span><span class="n">filter</span><span class="o">-</span><span class="n">class</span><span class="o">&gt;</span><span class="n">com</span><span class="o">.</span><span class="na">journaldev</span><span class="o">.</span><span class="na">servlet</span><span class="o">.</span><span class="na">filters</span><span class="o">.</span><span class="na">AuthenticationFilter</span><span class="o">&lt;/</span><span class="n">filter</span><span class="o">-</span><span class="n">class</span><span class="o">&gt;</span>
+</span><span class='line'>  <span class="o">&lt;/</span><span class="n">filter</span><span class="o">&gt;&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span>  <span class="o">&lt;</span><span class="n">filter</span><span class="o">-</span><span class="n">mapping</span><span class="o">&gt;</span>
+</span><span class='line'>    <span class="o">&lt;</span><span class="n">filter</span><span class="o">-</span><span class="n">name</span><span class="o">&gt;</span><span class="n">RequestLoggingFilter</span><span class="o">&lt;/</span><span class="n">filter</span><span class="o">-</span><span class="n">name</span><span class="o">&gt;</span>
+</span><span class='line'>    <span class="o">&lt;</span><span class="n">url</span><span class="o">-</span><span class="n">pattern</span><span class="o">&gt;/&lt;</span><span class="n">em</span><span class="o">&gt;&lt;/</span><span class="n">url</span><span class="o">-</span><span class="n">pattern</span><span class="o">&gt;</span>
+</span><span class='line'>    <span class="o">&lt;</span><span class="n">dispatcher</span><span class="o">&gt;</span><span class="n">REQUEST</span><span class="o">&lt;/</span><span class="n">dispatcher</span><span class="o">&gt;</span>
+</span><span class='line'>  <span class="o">&lt;/</span><span class="n">filter</span><span class="o">-</span><span class="n">mapping</span><span class="o">&gt;</span>
+</span><span class='line'>  <span class="o">&lt;</span><span class="n">filter</span><span class="o">-</span><span class="n">mapping</span><span class="o">&gt;</span>
+</span><span class='line'>    <span class="o">&lt;</span><span class="n">filter</span><span class="o">-</span><span class="n">name</span><span class="o">&gt;</span><span class="n">AuthenticationFilter</span><span class="o">&lt;/</span><span class="n">filter</span><span class="o">-</span><span class="n">name</span><span class="o">&gt;</span>
+</span><span class='line'>    <span class="o">&lt;</span><span class="n">url</span><span class="o">-</span><span class="n">pattern</span><span class="o">&gt;/&lt;/</span><span class="n">em</span><span class="o">&gt;&lt;/</span><span class="n">url</span><span class="o">-</span><span class="n">pattern</span><span class="o">&gt;</span>
+</span><span class='line'>  <span class="o">&lt;/</span><span class="n">filter</span><span class="o">-</span><span class="n">mapping</span><span class="o">&gt;</span>
+</span><span class='line'><span class="o">&lt;/</span><span class="n">web</span><span class="o">-</span><span class="n">app</span><span class="o">&gt;</span>
+</span></code></pre></td></tr></table></div></figure></p>
+
+<p>接下来我们试验下效果。此处省略88个字……</p>
+]]></content>
+  </entry>
+  
+</feed>

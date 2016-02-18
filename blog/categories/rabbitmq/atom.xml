@@ -1,0 +1,217 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+
+  <title><![CDATA[Category: rabbitmq | Hi, I’m Yang Peng]]></title>
+  <link href="http://yeangpeng.tech/blog/categories/rabbitmq/atom.xml" rel="self"/>
+  <link href="http://yeangpeng.tech/"/>
+  <updated>2016-02-18T15:37:18+08:00</updated>
+  <id>http://yeangpeng.tech/</id>
+  <author>
+    <name><![CDATA[Yang Peng]]></name>
+    <email><![CDATA[me@yangpeng.tech]]></email>
+  </author>
+  <generator uri="http://octopress.org/">Octopress</generator>
+
+  
+  <entry>
+    <title type="html"><![CDATA[CentOS6.4安装rabbitmq-server]]></title>
+    <link href="http://yeangpeng.tech/blog/2015/04/26/rabbitmq-server/"/>
+    <updated>2015-04-26T10:55:13+08:00</updated>
+    <id>http://yeangpeng.tech/blog/2015/04/26/rabbitmq-server</id>
+    <content type="html"><![CDATA[<h3>在 CentOS 6.4上安装python</h3>
+
+<p>自己手动安装python2.7.5，不要动系统上面其他的版本</p>
+
+<p><strong>1,先安装GCC，用如下命令yum install gcc gcc-c++</strong>
+<code>
+yum install zlib
+yum install zlib-devel
+</code>
+<strong>2,下载 <a href="https://www.python.org/ftp/python/2.7.5/Python-2.7.5.tgz">python-2.7.5.tar.gz</a> 文件，修改文件权限</strong>
+<code>
+chmode +x python-7.5.tar.gz
+</code>
+<strong>3,解压tar文件</strong>
+<code>
+tar -xzvf python-2.7.5.tar.gz
+</code>
+<strong>4,编辑Setup.dist</strong>
+<code>
+cd python-2.7.5
+vim Python-2.7.5/Modules/Setup.dist
+</code>
+找到<!--more--></p>
+
+<pre><code>#SSL=/usr/local/ssl
+#_ssl _ssl.c \
+#       -DUSE_SSL -I$(SSL)/include -I$(SSL)/include/openssl \
+#       -L$(SSL)/lib -lssl -lcrypto
+......
+#zlib zlibmodule.c -I$(prefix)/include -L$(exec_prefix)/lib -lz
+</code></pre>
+
+<p>把注释去掉后开始执行安装
+<code>
+./configure --prefix=/usr/local/python27 --with-zlib=/usr/include
+make &amp;amp;&amp;amp; make install
+</code>
+<strong>5、建立软连接，使系统默认的python指向python27</strong>
+<code>
+mv /usr/bin/python /usr/bin/python2.6.6.old
+ln -s /usr/local/python27/bin/python2.7 /usr/bin/python
+</code>
+已经安装完成python的安装或升级的全部操作了，我们再来看一下现在的python的版本：
+<code>
+python -V
+Python 2.7.5
+</code>
+虽然现在python已经安装完成，但是使用yum命令会有问题——yum不能正常工作。</p>
+
+<p>这是因为yum默认使用的python版本是2.6.6，到哪是现在的python版本是2.7.5，
+故会出现上述问题，只需要该一下yum的默认python配置版本就行了：
+<code>
+vi /usr/bin/yum
+</code>
+将文件头部的<code>#!/usr/bin/python</code> 改为<code>#!/usr/bin/python2.6</code></p>
+
+<h3>在 CentOS 6.4上安装Erlang</h3>
+
+<p>在本节中，我们将来学习如何在CentOS 6.4上安装erlang，具体的Erlang版本是R16B02。</p>
+
+<p>在安装之前，需要先要安装一些其他的软件，否则在安装中间会出现一些由于没有其依赖的软件模块而失败。</p>
+
+<p><strong>1、首先要先安装GCC GCC-C++ Openssl等以来模块：</strong>
+<code>
+yum -y install make gcc gcc-c++ kernel-devel m4 ncurses-devel openssl-devel
+</code>
+<strong>2、再安装ncurses模块</strong>
+<code>
+yum -y install ncurses-devel
+yum install ncurses-devel
+</code>
+<strong>3、下载Erang源代码文件文件，并对其付权限和解压文件：</strong>
+<code>
+wget http://www.erlang.org/download/otp_src_R16B02.tar.gz
+chmod +x otp_src_R16B02.tar.gz
+tar -xzvf otp_src_R16B02.tar.gz
+mv otp_src_R16B02 erlang_R16B #重命名解压厚的文件
+</code>
+<strong>4、下面是安装erlang的重头戏，依次执行以下操作：</strong>
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>cd erlang_R16B/&lt;/p&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;h1&gt;不用java编译，故去掉java避免错误&lt;/h1&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;p&gt;./configure &ndash;prefix=/usr/local/erlang &ndash;with-ssl &ndash;enable-threads &ndash;enable-smp-support &ndash;enable-kernel-poll &ndash;enable-hipe &ndash;without-javac
+</span><span class='line'>make &amp;&amp; make install #编译后安装
+</span><span class='line'>&lt;code&gt;
+</span><span class='line'>**5、配置erlang环境：**
+</span><span class='line'>&lt;/code&gt;
+</span><span class='line'>vi /etc/profile
+</span><span class='line'>ERL_HOME=/usr/local/erlang
+</span><span class='line'>export PATH=$PATH:$ERL_HOME/bin</span></code></pre></td></tr></table></div></figure>
+好了，现在erlang的已经配置好了，现在我们来测试一下是否安装成功,在控制台输入命令erl，
+如果在erlang shell里出现下图所示就说明安装成功了：
+此处省略截图了…</p>
+
+<h3>在CentOS上安装rabbitmq-server-3.1.5</h3>
+
+<p>在本节中我们来看一下如何在CentOS上安装RabbitMQ。
+我们使用的rabbitmq的版本是rabbitmq-server-3.1.5.tar.gz，CentOS的版本是CentOS 6.4。</p>
+
+<p>在安装rabbitmq之前需要先安装python和erlang，
+这两部分的安装过程请参看在CentOS 6.4上安装python和在 CentOS 6.4上安装Erlang，这里不再赘述。</p>
+
+<p>安装rabbitmq的具体步骤如下：</p>
+
+<p><strong>1、下载rabbitmq-server-3.1.5.tar.gz文件，并解压之：</strong>
+<code>
+cd /usr/local
+wget http://www.rabbitmq.com/releases/rabbitmq-server/v3.1.5/rabbitmq-server-3.1.5.tar.gz
+chmod +x rabbitmq-server-3.1.5.tar.gz
+tar -xzvf rabbitmq-server-3.1.5.tar.gz
+</code>
+<strong>2、在编译rabbitmq源码之前先要安装其需要依赖包：</strong>
+<code>
+yum -y install xmlto
+</code>
+否则会编译不通过：
+<code>
+/bin/sh: line 1: xmlto: command not found
+</code>
+<strong>3、开始编译源代码：</strong>
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>cd rabbitmq-server-3.1.5
+</span><span class='line'>make&lt;/p&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;h1&gt;将rabbitmq编译到/opt/mq/rabbitmq目录&lt;/h1&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;p&gt;make install TARGET_DIR=/opt/mq/rabbitmq SBIN_DIR=/opt/mq/rabbitmq/sbin MAN_DIR=/opt/mq/rabbitmq/man
+</span><span class='line'>&lt;code&gt;
+</span><span class='line'>**4、安装web插件管理界面**
+</span><span class='line'>&lt;/code&gt;
+</span><span class='line'>cd /opt/mq/rabbitmq/sbin
+</span><span class='line'>mkdir /etc/rabbitmq/
+</span><span class='line'>rabbitmq-plugins enable rabbitmq_management
+</span><span class='line'>&lt;code&gt;
+</span><span class='line'>**5、好了，到这里rabbitmq已经配置好了，可以启动了：**
+</span><span class='line'>&lt;/code&gt;
+</span><span class='line'>./rabbitmq-server start &amp;</span></code></pre></td></tr></table></div></figure>
+我运行的时候报错了，ERROR: epmd error for host “springzoo”: timeout (timed out)</p>
+
+<p>更改下/etc/hosts:</p>
+
+<pre><code>127.0.0.1   localhost springzoo
+::1         localhost springzoo
+</code></pre>
+
+<p>接下来我们查看下端口
+<code>
+ps aux | grep rabbitmq #查看端口，默认就是5672
+netstat -tnlp | grep 5672
+</code>
+应该是下面的结果</p>
+
+<pre><code>tcp        0      0 0.0.0.0:15672               0.0.0.0:*                   LISTEN      30435/beam.smp
+tcp        0      0 0.0.0.0:55672               0.0.0.0:*                   LISTEN      30435/beam.smp
+tcp        0      0 :::5672                     :::*                        LISTEN      30435/beam.smp
+</code></pre>
+
+<p>如果看到下面的信息就表明已经启动成功了！
+省略截图….</p>
+
+<p>最好我们就可以在浏览器上输入<a href="http://127.0.0.1:15672/%E7%99%BB%E5%BD%95%E7%AE%A1%E7%90%86%E7%95%8C%E9%9D%A2%E4%BA%86">http://127.0.0.1:15672/%E7%99%BB%E5%BD%95%E7%AE%A1%E7%90%86%E7%95%8C%E9%9D%A2%E4%BA%86</a></p>
+
+<p>使用登录的名户名和密码默认都算guest，登录后的页面如下：</p>
+
+<p>截图再次省略…</p>
+]]></content>
+  </entry>
+  
+</feed>
